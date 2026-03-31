@@ -40,6 +40,13 @@ class TwilioVoiceService {
   /// Requests mic/phone permissions, mints a Voice JWT, registers FCM (Android),
   /// and calls [TwilioVoice.instance.setTokens].
   Future<void> register() async {
+    if (Platform.isWindows || Platform.isLinux) {
+      throw UnsupportedError(
+        'Twilio Programmable Voice is not supported on Windows/Linux desktop. '
+        'Use Android or iOS for calls; Windows is for UI preview only.',
+      );
+    }
+
     final cfgErr = TwilioConfig.validateOrNull();
     if (cfgErr != null) {
       throw StateError(cfgErr);

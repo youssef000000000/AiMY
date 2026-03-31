@@ -22,6 +22,8 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+def debugEmuOnly = (project.findProperty('android.debugEmuOnly') ?: 'true').toString().toBoolean()
+
 android {
     namespace "com.aimy.aimy"
     compileSdk 35
@@ -45,6 +47,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            if (debugEmuOnly) {
+                ndk {
+                    abiFilters 'x86_64'
+                }
+            }
+        }
         release {
             signingConfig signingConfigs.debug
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
