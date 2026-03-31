@@ -1,0 +1,84 @@
+{
+  "design": {
+    "device": {
+      "baseWidth": 390,
+      "baseHeight": 844,
+      "safeAreaTop": 59,
+      "safeAreaBottom": 34
+    },
+    "spacing": {
+      "4": { "value": 4, "type": "dimension" },
+      "8": { "value": 8, "type": "dimension" },
+      "12": { "value": 12, "type": "dimension" },
+      "16": { "value": 16, "type": "dimension" },
+      "20": { "value": 20, "type": "dimension" },
+      "24": { "value": 24, "type": "dimension" },
+      "32": { "value": 32, "type": "dimension" },
+      "48": { "value": 48, "type": "dimension" },
+      "64": { "value": 64, "type": "dimension" }
+    },
+    "radius": {
+      "sm": 8,
+      "md": 12,
+      "lg": 16,
+      "xl": 24
+    },
+    "colors": {
+      "bgPrimary": "#0D1117",
+      "bgSurface": "#161B22",
+      "bgCard": "#21262D",
+      "accentPrimary": "#58A6FF",
+      "accentSecondary": "#A371F7",
+      "accentSuccess": "#3FB950",
+      "accentError": "#F85149",
+      "accentWarning": "#D29922",
+      "textPrimary": "#E6EDF3",
+      "textSecondary": "#B1BAC4",
+      "textMuted": "#8B949E",
+      "border": "#30363D"
+    },
+    "typography": {
+      "display": { "size": 28, "weight": 700, "lineHeight": 34 },
+      "h1": { "size": 24, "weight": 600, "lineHeight": 30 },
+      "h2": { "size": 20, "weight": 600, "lineHeight": 26 },
+      "h3": { "size": 18, "weight": 600, "lineHeight": 24 },
+      "body": { "size": 16, "weight": 400, "lineHeight": 24 },
+      "bodySm": { "size": 14, "weight": 400, "lineHeight": 20 },
+      "caption": { "size": 12, "weight": 400, "lineHeight": 16 },
+      "label": { "size": 14, "weight": 500, "lineHeight": 20 }
+    },
+    "screens": {
+      "incomingCall": {
+        "avatarSize": 120,
+        "avatarTop": 180,
+        "contextCard": { "width": 350, "height": 140, "top": 400 },
+        "actionButton": { "size": 72, "spacing": 48, "iconSize": 32 }
+      },
+      "activeCall": {
+        "topBarHeight": 56,
+        "transcriptTop": 140,
+        "transcriptHeight": 380,
+        "controlButton": { "size": 64, "iconSize": 28, "spacing": 40 },
+        "nudgeCard": { "width": 140, "height": 80 },
+        "handoffButtonHeight": 44
+      },
+      "postCall": {
+        "headerHeight": 80,
+        "summaryCardHeight": 200,
+        "insightCardHeight": 72,
+        "actionCardHeight": 56,
+        "saveButtonHeight": 52
+      },
+      "profile": {
+        "avatarSize": 64,
+        "callButtonSize": 56,
+        "contactSectionHeight": 88
+      },
+      "miniPlayer": {
+        "height": 72,
+        "avatarSize": 48,
+        "totalHeight": 106
+      }
+    }
+  }
+}
