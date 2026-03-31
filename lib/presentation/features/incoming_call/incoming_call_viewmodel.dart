@@ -61,6 +61,10 @@ class IncomingCallViewModel extends ChangeNotifier {
     if (s.contains('Microphone')) {
       return 'Microphone permission is required to place a call.';
     }
+    if (s.contains('not supported on Windows') ||
+        s.contains('not supported on Linux')) {
+      return 'Twilio calls work on Android and iOS only. Use the emulator or a phone.';
+    }
     return s;
   }
 }
