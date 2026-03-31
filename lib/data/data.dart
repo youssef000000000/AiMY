@@ -3,3 +3,5 @@
 library;
 
 export 'repositories/mock_profile_repository.dart';
+export 'twilio/twilio_access_token.dart';
+export 'twilio/twilio_voice_service.dart';

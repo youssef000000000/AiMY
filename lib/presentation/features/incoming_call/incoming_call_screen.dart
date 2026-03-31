@@ -93,12 +93,13 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
     return ListenableBuilder(
       listenable: _viewModel,
       builder: (context, _) {
-        return Padding(
+        return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(
             horizontal: AimyPhoneDesignTokens.screenPaddingH,
             vertical: AimyPhoneDesignTokens.screenPaddingV,
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 8),
               const Text(
@@ -131,7 +132,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
               ),
               const SizedBox(height: 24),
               _buildContextCard(),
-              const Spacer(),
+              const SizedBox(height: 32),
               if (_viewModel.error != null) ...[
                 Text(
                   _viewModel.error!,

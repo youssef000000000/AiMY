@@ -1,8 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:aimy/core/core.dart';
 import 'package:aimy/presentation/presentation.dart';
+import 'package:flutter/material.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  TwilioConfig.debugLogMissing();
   runApp(const AiMYApp());
 }
 
