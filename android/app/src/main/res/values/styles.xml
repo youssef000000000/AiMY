@@ -6,7 +6,6 @@
     <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
         <item name="android:colorBackground">@android:color/black</item>
-        <item name="android:windowColorBackground">@android:color/black</item>
         <item name="android:textColor">@android:color/white</item>
     </style>
 </resources>

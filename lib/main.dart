@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'core/theme/theme.dart';
-import 'screens/screens.dart';
+import 'package:aimy/core/core.dart';
+import 'package:aimy/presentation/presentation.dart';
 
 void main() {
   runApp(const AiMYApp());
@@ -15,7 +15,7 @@ class AiMYApp extends StatelessWidget {
       title: 'AiMY',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
-      home: const DashboardScreen(),
+      home: const IncomingCallScreen(),
     );
   }
 }

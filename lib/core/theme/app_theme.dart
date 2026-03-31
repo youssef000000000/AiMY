@@ -49,7 +49,7 @@ class AppTheme {
           borderSide: BorderSide(color: AppColors.primary, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        hintStyle: AppTypography.bodyLarge.copyWith(
+        hintStyle: AppTypography.textTheme.bodyLarge!.copyWith(
           color: AppColors.textMuted,
         ),
       ),
