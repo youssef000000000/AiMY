@@ -8,10 +8,10 @@ class MockProfileRepository implements ProfileRepository {
     await Future<void>.delayed(const Duration(milliseconds: 400));
     return const ProfileEntity(
       id: '1',
-      displayName: 'Sarah Chen',
+      displayName: 'Youssef Emad',
       title: 'Senior Developer',
       company: 'AiMY Talent',
-      phoneNumber: '+15552345678',
+      phoneNumber: '+201065332025',
       avatarUrl: null,
     );
   }

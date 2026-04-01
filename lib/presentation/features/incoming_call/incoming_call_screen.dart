@@ -93,47 +93,74 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
     return ListenableBuilder(
       listenable: _viewModel,
       builder: (context, _) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AimyPhoneDesignTokens.screenPaddingH,
-            vertical: AimyPhoneDesignTokens.screenPaddingV,
+        final hPad = AimyPhoneDesignTokens.screenPaddingH;
+        final vPad = AimyPhoneDesignTokens.screenPaddingV;
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            hPad,
+            vPad,
+            hPad,
+            vPad + AimyPhoneDesignTokens.safeAreaBottom * 0.35,
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 8),
-              const Text(
-                'Incoming Call',
-                style: TextStyle(
-                  fontSize: AimyPhoneDesignTokens.textH3,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Incoming Call',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: AimyPhoneDesignTokens.textH3,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 42),
+                            Center(child: _buildAvatar()),
+                            const SizedBox(height: 18),
+                            Text(
+                              _profile!.displayName,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 40,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                height: 1.0,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${_profile!.title ?? 'Candidate'} • ${_profile!.company ?? 'AiMY Talent'}',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: AimyPhoneDesignTokens.textBodySm,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            _buildContextCard(),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
-              const SizedBox(height: 42),
-              _buildAvatar(),
-              const SizedBox(height: 18),
-              Text(
-                _profile!.displayName,
-                style: const TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  height: 1.0,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${_profile!.title ?? 'Candidate'} • ${_profile!.company ?? 'AiMY Talent'}',
-                style: const TextStyle(
-                  fontSize: AimyPhoneDesignTokens.textBodySm,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 24),
-              _buildContextCard(),
-              const SizedBox(height: 32),
               if (_viewModel.error != null) ...[
+                const SizedBox(height: 12),
                 Text(
                   _viewModel.error!,
                   textAlign: TextAlign.center,
@@ -142,9 +169,9 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
                     fontSize: AimyPhoneDesignTokens.textCaption,
                   ),
                 ),
-                const SizedBox(height: 10),
               ],
               if (_viewModel.lastCallSid != null) ...[
+                const SizedBox(height: 10),
                 Text(
                   'Call started (sid: ${_viewModel.lastCallSid})',
                   textAlign: TextAlign.center,
@@ -153,10 +180,9 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
                     fontSize: AimyPhoneDesignTokens.textCaption,
                   ),
                 ),
-                const SizedBox(height: 10),
               ],
+              const SizedBox(height: 16),
               _buildActions(context),
-              const SizedBox(height: 12),
             ],
           ),
         );
