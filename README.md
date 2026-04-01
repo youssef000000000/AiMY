@@ -2,6 +2,11 @@
 
 UI-only Flutter prototype for the AiMY AI assistant dashboard (dark futuristic theme, Material 3).
 
+## Demo vs production
+
+- **Stakeholder demos (squad, manager):** work on the **`demo`** branch and follow [`docs/DEMO_RUNBOOK.md`](docs/DEMO_RUNBOOK.md) (devices, Twilio, checklist).
+- **Production later:** fork or branch `production` when you are ready for token servers, real APIs, and no client-side secrets—not required for the first demos.
+
 ## Run the app
 
 1. **Ensure Flutter is installed** and on your PATH.
