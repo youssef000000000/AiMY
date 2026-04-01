@@ -4,8 +4,17 @@ UI-only Flutter prototype for the AiMY AI assistant dashboard (dark futuristic t
 
 ## Demo vs production
 
-- **Stakeholder demos (squad, manager):** work on the **`demo`** branch and follow [`docs/DEMO_RUNBOOK.md`](docs/DEMO_RUNBOOK.md) (devices, Twilio, checklist).
-- **Production later:** fork or branch `production` when you are ready for token servers, real APIs, and no client-side secrets—not required for the first demos.
+Stakeholder demos (squad, manager) stay on the **`demo`** branch so quick integrations and mock data do not get confused with a release line.
+
+| Track | Branch | Doc |
+|--------|--------|-----|
+| Demo (iterate here) | `demo` | [`docs/DEMO_RUNBOOK.md`](docs/DEMO_RUNBOOK.md) — workflow, full `--dart-define` list, PowerShell/bash examples, checklist, troubleshooting |
+| Integration | `main` | Merge `demo` when the demo is stable |
+| Production (later) | `production` (create when ready) | Token server, no secrets in the client, real APIs |
+
+```bash
+git checkout demo && git pull origin demo
+```
 
 ## Run the app
 
