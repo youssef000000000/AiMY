@@ -62,7 +62,7 @@ class ProfileViewModel extends ChangeNotifier {
     _lastCallSid = null;
     notifyListeners();
 
-    final baseUrl = const String.fromEnvironment(
+    const baseUrl = String.fromEnvironment(
       'TWILIO_DEMO_SERVER_BASE_URL',
       defaultValue: 'http://10.0.2.2:3000',
     );

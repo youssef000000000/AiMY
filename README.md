@@ -16,6 +16,8 @@ Stakeholder demos (squad, manager) stay on the **`demo`** branch so quick integr
 git checkout demo && git pull origin demo
 ```
 
+**Local Twilio + Firebase (Android demo):** copy `config/dart_defines.example.json` to `config/dart_defines.json` (gitignored), fill values, then run `.\scripts\run_android_demo.ps1`. See [`docs/DEMO_RUNBOOK.md`](docs/DEMO_RUNBOOK.md).
+
 ## Run the app
 
 1. **Ensure Flutter is installed** and on your PATH.

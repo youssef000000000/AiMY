@@ -13,6 +13,9 @@ android/build/
 *.iml
 .idea/workspace.xml
 
+# Local secrets (copy from config/dart_defines.example.json — never commit real values)
+config/dart_defines.json
+
 # OS
 .DS_Store
 Thumbs.db

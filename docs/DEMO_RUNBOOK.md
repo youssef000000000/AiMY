@@ -59,6 +59,14 @@ Use this **in order** so the room does not lose time to environment issues.
 
 **Demo flow in the app:** launch → incoming-call style screen → **Answer** starts the outbound test call → verify audio → end call.
 
+### Priority A — in-app demo blocker (implemented)
+
+- On load, the app checks **Twilio + Firebase** defines (and rejects **template placeholders**).
+- It then **registers** with Twilio (FCM on Android). **Green “Voice ready”** means registration succeeded—tap **Answer** to dial.
+- If you see **“Demo blocked”**, fix `config/dart_defines.json` and run again.
+- **60-second rehearsal script** for managers/squad: [`docs/DEMO_REHEARSAL.md`](DEMO_REHEARSAL.md).
+- Optional pre-run: `.\scripts\verify_dart_defines.ps1` (checks JSON keys are non-empty).
+
 ---
 
 ## 3. Secrets and `--dart-define`
@@ -87,6 +95,26 @@ Secrets are passed at **build/run time**, not committed to git.
 | `FIREBASE_STORAGE_BUCKET` | Optional; defaults if omitted |
 
 Implementation reference: `lib/core/config/twilio_config.dart`, `lib/core/config/firebase_options_dev.dart`.
+
+### Local JSON file (recommended; not committed)
+
+1. Copy **`config/dart_defines.example.json`** → **`config/dart_defines.json`** (same folder).
+2. Replace placeholders with real values from Twilio and Firebase. **`config/dart_defines.json` is gitignored** so secrets stay off the remote.
+3. From the project root, run (Flutter **3.7+**):
+
+```powershell
+.\scripts\run_android_demo.ps1
+```
+
+The script uses `--dart-define-from-file=config/dart_defines.json` and targets the first Android device (`-d android`). Override Flutter with `$env:FLUTTER_BAT = 'C:\path\to\flutter.bat'`, or edit the default path inside the script. Pass another device id: `.\scripts\run_android_demo.ps1 -Device emulator-5554`.
+
+You can also invoke Flutter directly:
+
+```powershell
+flutter run -d android --dart-define-from-file=config/dart_defines.json
+```
+
+Omit optional keys you do not use (e.g. `FIREBASE_IOS_APP_ID` on Android-only).
 
 ### Example: PowerShell (Windows)
 
@@ -129,7 +157,7 @@ flutter run \
 | Red error about Twilio / `setTokens` | Defines incomplete; TwiML App SID; Twilio Debugger; on **iOS**, VoIP / PushKit setup |
 | Firebase / FCM | `FIREBASE_*` defines for the platform; network; correct Android app id in Firebase |
 | “Not supported on Windows” | Run on Android or iOS, not Windows desktop |
-| Call does not connect | TwiML App **Voice URL** must return TwiML that dials or routes the outbound leg correctly |
+| Call does not connect / “Could not start the call” | TwiML App **Voice URL** (Function or Bin), **trial verified** callee, **Monitor → Debugger** — see [`docs/TWILIO_OUTBOUND_TWIML.md`](TWILIO_OUTBOUND_TWIML.md) |
 
 ---
 

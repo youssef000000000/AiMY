@@ -71,4 +71,20 @@ class FirebaseOptionsDev {
         'FIREBASE_IOS_APP_ID (iOS). Optional: FIREBASE_STORAGE_BUCKET. '
         'FCM token is required on Android for Twilio Voice registration.';
   }
+
+  /// True when defines look like the template file, not a real Firebase project.
+  static bool get isLikelyPlaceholder {
+    if (_apiKey.isEmpty && _projectId.isEmpty) return false;
+    final key = _apiKey.toLowerCase();
+    final pid = _projectId.toLowerCase();
+    final aid = _androidAppId.toLowerCase();
+    final ios = _iosAppId.toLowerCase();
+    if (key.contains('your_firebase') || pid.contains('your-firebase')) {
+      return true;
+    }
+    if (aid.contains('abcdef0123456789abcd')) return true;
+    if (ios.contains('abcdef0123456789abcd')) return true;
+    if (pid == 'your-firebase-project-id') return true;
+    return false;
+  }
 }

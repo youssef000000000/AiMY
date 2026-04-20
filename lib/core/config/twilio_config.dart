@@ -25,6 +25,25 @@ class TwilioConfig {
       apiKeySecret.isNotEmpty &&
       twimlApplicationSid.isNotEmpty;
 
+  /// True when values look like [config/dart_defines.example.json] (not real secrets).
+  static bool get isLikelyPlaceholder {
+    if (!hasCredentials) return false;
+    final a = accountSid.toLowerCase();
+    final k = apiKeySid.toLowerCase();
+    final s = apiKeySecret.toLowerCase();
+    final t = twimlApplicationSid.toLowerCase();
+    if (a.contains('xxxx') || k.contains('xxxx') || t.contains('xxxx')) {
+      return true;
+    }
+    if (s.contains('your_twilio') || s == 'your_twilio_api_key_secret') {
+      return true;
+    }
+    if (a.length < 32 || k.length < 32 || t.length < 32) {
+      return true;
+    }
+    return false;
+  }
+
   static String? validateOrNull() {
     if (hasCredentials) return null;
     return 'Twilio: set --dart-define=TWILIO_ACCOUNT_SID, TWILIO_API_KEY_SID, '

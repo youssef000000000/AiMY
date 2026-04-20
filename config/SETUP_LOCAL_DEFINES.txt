@@ -1,0 +1,19 @@
+Local Twilio + Firebase (not committed — dart_defines.json is gitignored)
+
+1) Copy template (once): dart_defines.example.json → dart_defines.json
+2) Replace every placeholder in dart_defines.json with values from:
+   - Twilio Console: Account SID, API Key SID + Secret, TwiML App SID
+   - Firebase Console: Project settings → Your apps → Android app whose package name is exactly:
+     com.aimy.aimy
+3) Run from repo root:
+   .\scripts\run_android_demo.ps1 -Device emulator-5554
+4) If Answer still shows a Twilio error, check Twilio Monitor → Debugger and the runbook (docs/DEMO_RUNBOOK.md).
+
+Android / Firebase native (Gradle):
+- google-services plugin is enabled in android/settings.gradle and android/app/build.gradle.
+- Place android/app/google-services.json from Firebase Console (Download google-services.json) OR replace
+  the current_key value in that file with the Web API key from Project settings (same project as com.aimy.aimy).
+- You do NOT need to add firebase-bom or firebase-analytics in app/build.gradle; Flutter firebase_core /
+  firebase_messaging already bring Firebase libraries.
+- Keep android/app/google-services.json `current_key` identical to FIREBASE_API_KEY in dart_defines.json
+  (native FCM reads google-services.json; Dart reads --dart-define).

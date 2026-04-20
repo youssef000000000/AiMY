@@ -10,7 +10,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         surface: AppColors.surface,
@@ -42,11 +42,11 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
-          borderSide: BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
-          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         hintStyle: AppTypography.textTheme.bodyLarge!.copyWith(

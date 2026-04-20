@@ -8,6 +8,7 @@ class ProfileEntity {
     this.company,
     this.phoneNumber,
     this.avatarUrl,
+    this.avatarAssetPath,
   });
 
   final String id;
@@ -16,6 +17,8 @@ class ProfileEntity {
   final String? company;
   final String? phoneNumber;
   final String? avatarUrl;
+  /// Bundled image asset (e.g. `assets/images/youssef_emad.png`). Used before [avatarUrl].
+  final String? avatarAssetPath;
 
   /// Whether the profile has a phone number (Call button visible).
   bool get canCall => phoneNumber != null && phoneNumber!.trim().isNotEmpty;

@@ -50,6 +50,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
         _profile = loaded;
         _isLoading = false;
       });
+      await _viewModel.warmUpDemo();
     } catch (e) {
       setState(() {
         _loadError = e.toString();
@@ -93,11 +94,11 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
     return ListenableBuilder(
       listenable: _viewModel,
       builder: (context, _) {
-        final hPad = AimyPhoneDesignTokens.screenPaddingH;
-        final vPad = AimyPhoneDesignTokens.screenPaddingV;
+        const hPad = AimyPhoneDesignTokens.screenPaddingH;
+        const vPad = AimyPhoneDesignTokens.screenPaddingV;
 
         return Padding(
-          padding: EdgeInsets.fromLTRB(
+          padding: const EdgeInsets.fromLTRB(
             hPad,
             vPad,
             hPad,
@@ -106,6 +107,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              _buildDemoStatusBanner(),
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -190,10 +192,131 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
     );
   }
 
+  Widget _buildDemoStatusBanner() {
+    if (_viewModel.isWarmingUpDemo) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Preparing voice (Twilio + Firebase)…',
+                style: TextStyle(
+                  color: AppColors.textSecondary.withOpacity(0.95),
+                  fontSize: AimyPhoneDesignTokens.textCaption,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!_viewModel.isDemoConfigReady) {
+      final lines = DemoPreflight.evaluateBlockers();
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0x33C62828),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.error.withOpacity(0.6)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Demo blocked — fix config',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: AimyPhoneDesignTokens.textBodySm,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...lines.map(
+                (s) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    '• $s',
+                    style: const TextStyle(
+                      color: Color(0xFFFFCDD2),
+                      fontSize: AimyPhoneDesignTokens.textCaption,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_viewModel.warmUpError != null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Text(
+          _viewModel.warmUpError!,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppColors.error,
+            fontSize: AimyPhoneDesignTokens.textCaption,
+            height: 1.35,
+          ),
+        ),
+      );
+    }
+
+    if (_viewModel.isTwilioRegistered) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0x332E7D32),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: AimyPhoneDesignTokens.answerGreen.withOpacity(0.5),
+            ),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Color(0xFF81C784), size: 18),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Voice ready — tap Answer to place the demo call.',
+                  style: TextStyle(
+                    color: Color(0xFFC8E6C9),
+                    fontSize: AimyPhoneDesignTokens.textCaption,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
   Widget _buildAvatar() {
     final initial = _profile!.displayName.isNotEmpty
         ? _profile!.displayName[0].toUpperCase()
         : '?';
+    final avatar = profileAvatarImageProvider(_profile!);
 
     return Container(
       width: AimyPhoneDesignTokens.incomingCallAvatarSize,
@@ -205,9 +328,8 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
       ),
       child: CircleAvatar(
         backgroundColor: AppColors.surface,
-        backgroundImage:
-            _profile!.avatarUrl != null ? NetworkImage(_profile!.avatarUrl!) : null,
-        child: _profile!.avatarUrl == null
+        backgroundImage: avatar,
+        child: avatar == null
             ? Text(
                 initial,
                 style: const TextStyle(
@@ -230,9 +352,9 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           Text(
             'Candidate Context',
             style: TextStyle(
@@ -278,7 +400,8 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
           color: AimyPhoneDesignTokens.answerGreen,
           icon: _viewModel.isPlacingCall ? Icons.hourglass_top : Icons.call,
           label: _viewModel.isPlacingCall ? 'Calling' : 'Answer',
-          onTap: _viewModel.isPlacingCall
+          onTap: _viewModel.isPlacingCall ||
+                  !_viewModel.canAttemptAnswer(_profile!)
               ? null
               : () => _viewModel.answerCall(_profile!),
         ),

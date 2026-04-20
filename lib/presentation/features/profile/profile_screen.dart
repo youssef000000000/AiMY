@@ -55,7 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.all(24),
                     child: Text(
                       _viewModel.error!,
-                      style: TextStyle(color: AppColors.error),
+                      style: const TextStyle(color: AppColors.error),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -74,10 +74,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildContent(ProfileEntity p) {
-    final paddingH = AimyPhoneDesignTokens.screenPaddingH;
+    const paddingH = AimyPhoneDesignTokens.screenPaddingH;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: paddingH,
         vertical: AimyPhoneDesignTokens.screenPaddingV,
       ),
@@ -85,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(p),
-          SizedBox(height: AimyPhoneDesignTokens.space24),
+          const SizedBox(height: AimyPhoneDesignTokens.space24),
           _buildContactSection(p),
           if (_viewModel.callError != null) ...[
             const SizedBox(height: 12),
@@ -104,6 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildHeader(ProfileEntity p) {
     // Layout/spacing tokens (phone design spec).
+    final avatar = profileAvatarImageProvider(p);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -111,8 +112,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         CircleAvatar(
           radius: AimyPhoneDesignTokens.profileAvatarSize / 2,
           backgroundColor: AppColors.surface,
-          backgroundImage: p.avatarUrl != null ? NetworkImage(p.avatarUrl!) : null,
-          child: p.avatarUrl == null
+          backgroundImage: avatar,
+          child: avatar == null
               ? Text(
                   p.displayName.isNotEmpty ? p.displayName[0].toUpperCase() : '?',
                   style: const TextStyle(
@@ -122,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 )
               : null,
         ),
-        SizedBox(width: AimyPhoneDesignTokens.space16),
+        const SizedBox(width: AimyPhoneDesignTokens.space16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               if (p.title != null || p.company != null) ...[
-                SizedBox(height: AimyPhoneDesignTokens.space4),
+                const SizedBox(height: AimyPhoneDesignTokens.space4),
                 Text(
                   [p.title, p.company].whereType<String>().join(' • '),
                   style: const TextStyle(
@@ -154,7 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildContactSection(ProfileEntity p) {
     return Container(
-      padding: EdgeInsets.all(AimyPhoneDesignTokens.space20),
+      padding: const EdgeInsets.all(AimyPhoneDesignTokens.space20),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(AimyPhoneDesignTokens.radiusLg),
@@ -173,7 +174,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: AppColors.textMuted,
                   ),
                 ),
-                SizedBox(height: AimyPhoneDesignTokens.space4),
+                const SizedBox(height: AimyPhoneDesignTokens.space4),
                 Text(
                   p.phoneNumber ?? '—',
                   style: const TextStyle(
