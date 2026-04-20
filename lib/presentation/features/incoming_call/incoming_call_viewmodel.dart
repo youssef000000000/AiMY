@@ -62,13 +62,13 @@ class IncomingCallViewModel extends ChangeNotifier {
         !_isWarmingUp;
   }
 
-  Future<void> answerCall(ProfileEntity profile) async {
-    if (_isPlacingCall || !profile.canCall) return;
+  Future<bool> answerCall(ProfileEntity profile) async {
+    if (_isPlacingCall || !profile.canCall) return false;
 
     if (!DemoPreflight.isDemoConfigReady) {
       _error = DemoPreflight.evaluateBlockers().join('\n');
       notifyListeners();
-      return;
+      return false;
     }
 
     _isPlacingCall = true;
@@ -81,8 +81,10 @@ class IncomingCallViewModel extends ChangeNotifier {
     try {
       await TwilioVoiceService.instance.placeOutboundCall(to);
       _lastCallSid = await TwilioVoice.instance.call.getSid();
+      return true;
     } catch (e) {
       _error = _friendlyOutboundError(e);
+      return false;
     } finally {
       _isPlacingCall = false;
       notifyListeners();

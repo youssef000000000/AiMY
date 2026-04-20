@@ -3,6 +3,7 @@ import 'package:aimy/data/data.dart';
 import 'package:aimy/domain/domain.dart';
 import 'package:flutter/material.dart';
 
+import '../active_call/active_call_screen.dart';
 import 'incoming_call_viewmodel.dart';
 
 class IncomingCallScreen extends StatefulWidget {
@@ -403,7 +404,16 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
           onTap: _viewModel.isPlacingCall ||
                   !_viewModel.canAttemptAnswer(_profile!)
               ? null
-              : () => _viewModel.answerCall(_profile!),
+              : () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => _CallingScreen(
+                        profile: _profile!,
+                        viewModel: _viewModel,
+                      ),
+                    ),
+                  );
+                },
         ),
         _ActionButton(
           color: AimyPhoneDesignTokens.declineRed,
@@ -541,6 +551,163 @@ class _ActionButton extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CallingScreen extends StatefulWidget {
+  const _CallingScreen({
+    required this.profile,
+    required this.viewModel,
+  });
+
+  final ProfileEntity profile;
+  final IncomingCallViewModel viewModel;
+
+  @override
+  State<_CallingScreen> createState() => _CallingScreenState();
+}
+
+class _CallingScreenState extends State<_CallingScreen>
+    with WidgetsBindingObserver {
+  bool _didStart = false;
+  String? _localError;
+  bool _waitingForReturnFromDialer = false;
+  bool _sawBackgroundState = false;
+  bool _navigated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didStart) return;
+    _didStart = true;
+    _startCall();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!_waitingForReturnFromDialer || _navigated) return;
+    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+      _sawBackgroundState = true;
+      return;
+    }
+    if (state == AppLifecycleState.resumed && _sawBackgroundState) {
+      _goToActiveCall();
+    }
+  }
+
+  Future<void> _startCall() async {
+    final ok = await widget.viewModel.answerCall(widget.profile);
+    if (!mounted) return;
+    if (ok) {
+      setState(() {
+        _waitingForReturnFromDialer = true;
+      });
+      return;
+    }
+    setState(() {
+      _localError =
+          widget.viewModel.error ?? 'Could not start the call. Please try again.';
+    });
+  }
+
+  Future<void> _goToActiveCall() async {
+    if (!mounted || _navigated) return;
+    _navigated = true;
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => ActiveCallScreen(
+          profile: widget.profile,
+          callSid: widget.viewModel.lastCallSid,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 52,
+                  height: 52,
+                  child: CircularProgressIndicator(strokeWidth: 3),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Calling ${widget.profile.displayName}...',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: AimyPhoneDesignTokens.textH3,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Opening phone app (dialer)...',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: AimyPhoneDesignTokens.textBodySm,
+                  ),
+                ),
+                if (_waitingForReturnFromDialer) ...[
+                  const SizedBox(height: 10),
+                  const Text(
+                    'After the dialer opens, return to AiMY to see Active Call.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: AimyPhoneDesignTokens.textCaption,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton(
+                    onPressed: _goToActiveCall,
+                    child: const Text('Continue in AiMY'),
+                  ),
+                ],
+                if (_localError != null) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    _localError!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontSize: AimyPhoneDesignTokens.textCaption,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Back'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
