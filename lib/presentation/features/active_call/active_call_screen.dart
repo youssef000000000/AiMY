@@ -3,17 +3,21 @@ import 'package:aimy/domain/domain.dart';
 import 'package:flutter/material.dart';
 
 import 'active_call_viewmodel.dart';
+import '../mini_player/mini_player_screen.dart';
+import '../post_call/post_call_screen.dart';
 
 class ActiveCallScreen extends StatefulWidget {
   const ActiveCallScreen({
     super.key,
     required this.profile,
     this.callSid,
+    this.initialElapsed = const Duration(minutes: 1, seconds: 12),
     this.viewModel,
   });
 
   final ProfileEntity profile;
   final String? callSid;
+  final Duration initialElapsed;
   final ActiveCallViewModel? viewModel;
 
   @override
@@ -26,7 +30,11 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
   @override
   void initState() {
     super.initState();
-    _viewModel = widget.viewModel ?? ActiveCallViewModel(callSid: widget.callSid);
+    _viewModel = widget.viewModel ??
+        ActiveCallViewModel(
+          callSid: widget.callSid,
+          initialElapsed: widget.initialElapsed,
+        );
   }
 
   @override
@@ -57,8 +65,19 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                     _TopBar(
                       name: widget.profile.displayName,
                       time: _viewModel.formatElapsed(),
+                      onMinimize: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute<void>(
+                            builder: (_) => MiniPlayerScreen(
+                              profile: widget.profile,
+                              callSid: _viewModel.callSid,
+                              elapsed: _viewModel.elapsed,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
                     Center(
                       child: CircleAvatar(
                         radius: 34,
@@ -78,7 +97,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                             : null,
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     Text(
                       widget.profile.displayName,
                       textAlign: TextAlign.center,
@@ -97,13 +116,13 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                         fontSize: AimyPhoneDesignTokens.textCaption,
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     Expanded(
                       child: _TranscriptCard(lines: _viewModel.transcript),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     const _NudgesRow(),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     _ControlsRow(
                       isMuted: _viewModel.isMuted,
                       isOnHold: _viewModel.isOnHold,
@@ -111,9 +130,18 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                       onMute: _viewModel.toggleMute,
                       onHold: _viewModel.toggleHold,
                       onEnd: () async {
+                        final navigator = Navigator.of(context);
                         await _viewModel.endCall();
                         if (!mounted) return;
-                        Navigator.of(context).pop();
+                        await navigator.pushReplacement(
+                          MaterialPageRoute<void>(
+                            builder: (_) => PostCallScreen(
+                              profile: widget.profile,
+                              elapsed: _viewModel.elapsed,
+                              callSid: _viewModel.callSid,
+                            ),
+                          ),
+                        );
                       },
                     ),
                     if (_viewModel.callSid != null) ...[
@@ -141,17 +169,34 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.name, required this.time});
+  const _TopBar({
+    required this.name,
+    required this.time,
+    required this.onMinimize,
+  });
 
   final String name;
   final String time;
+  final VoidCallback onMinimize;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(Icons.graphic_eq_rounded, color: AppColors.primary, size: 20),
-        const SizedBox(width: 8),
+        Container(
+          width: AimyPhoneDesignTokens.minTouchTarget,
+          height: AimyPhoneDesignTokens.minTouchTarget,
+          decoration: BoxDecoration(
+            color: AppColors.surface.withOpacity(0.55),
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: IconButton(
+            onPressed: onMinimize,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primary),
+            tooltip: 'Minimize call',
+          ),
+        ),
         Expanded(
           child: Text(
             'Active call with $name',
@@ -202,13 +247,19 @@ class _TranscriptCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Live transcript',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: AimyPhoneDesignTokens.textBodySm,
-            ),
+          const Row(
+            children: [
+              Icon(Icons.fiber_manual_record, color: Color(0xFF45E07A), size: 10),
+              SizedBox(width: 6),
+              Text(
+                'Live transcript',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: AimyPhoneDesignTokens.textBodySm,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
           Expanded(
@@ -383,7 +434,18 @@ class _ControlButton extends StatelessWidget {
             child: Container(
               width: AimyPhoneDesignTokens.activeCallControlButtonSize,
               height: AimyPhoneDesignTokens.activeCallControlButtonSize,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0x33FFFFFF)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 12,
+                    offset: Offset(0, 5),
+                  ),
+                ],
+              ),
               child: Icon(
                 icon,
                 color: Colors.white,

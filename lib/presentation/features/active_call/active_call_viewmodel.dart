@@ -4,7 +4,11 @@ import 'package:flutter/foundation.dart';
 
 /// ViewModel for the Active Call screen (UI-first, demo-focused).
 class ActiveCallViewModel extends ChangeNotifier {
-  ActiveCallViewModel({String? callSid}) : _callSid = callSid {
+  ActiveCallViewModel({
+    String? callSid,
+    Duration initialElapsed = const Duration(minutes: 1, seconds: 12),
+  })  : _callSid = callSid,
+        _elapsed = initialElapsed {
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       _elapsed = _elapsed + const Duration(seconds: 1);
       notifyListeners();
@@ -12,7 +16,7 @@ class ActiveCallViewModel extends ChangeNotifier {
   }
 
   late final Timer _ticker;
-  Duration _elapsed = const Duration(minutes: 1, seconds: 12);
+  Duration _elapsed;
   bool _isMuted = false;
   bool _isOnHold = false;
   bool _isEnding = false;

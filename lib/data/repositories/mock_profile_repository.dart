@@ -17,4 +17,14 @@ class MockProfileRepository implements ProfileRepository {
       avatarAssetPath: 'assets/images/youssef_emad.png',
     );
   }
+
+  @override
+  Future<void> savePostCallData({
+    required String profileId,
+    required String summary,
+    required List<String> recruiterNotes,
+    DateTime? scheduledInterviewAt,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 650));
+  }
 }

@@ -15,17 +15,20 @@ class IncomingCallViewModel extends ChangeNotifier {
   bool _isPlacingCall = false;
   String? _error;
   String? _lastCallSid;
+  bool _lastCallUsedDemoFallback = false;
   bool _isWarmingUp = false;
   String? _warmUpError;
 
   bool get isPlacingCall => _isPlacingCall;
   String? get error => _error;
   String? get lastCallSid => _lastCallSid;
+  bool get lastCallUsedDemoFallback => _lastCallUsedDemoFallback;
 
   bool get isWarmingUpDemo => _isWarmingUp;
   String? get warmUpError => _warmUpError;
 
   bool get isDemoConfigReady => DemoPreflight.isDemoConfigReady;
+  bool get willUseDemoFallback => !isDemoConfigReady;
 
   bool get isTwilioRegistered => TwilioVoiceService.instance.isRegistered;
 
@@ -56,25 +59,24 @@ class IncomingCallViewModel extends ChangeNotifier {
   }
 
   bool canAttemptAnswer(ProfileEntity profile) {
-    return profile.canCall &&
-        DemoPreflight.isDemoConfigReady &&
-        !_isPlacingCall &&
-        !_isWarmingUp;
+    return profile.canCall && !_isPlacingCall && !_isWarmingUp;
   }
 
   Future<bool> answerCall(ProfileEntity profile) async {
     if (_isPlacingCall || !profile.canCall) return false;
 
-    if (!DemoPreflight.isDemoConfigReady) {
-      _error = DemoPreflight.evaluateBlockers().join('\n');
-      notifyListeners();
-      return false;
-    }
-
     _isPlacingCall = true;
     _error = null;
     _lastCallSid = null;
+    _lastCallUsedDemoFallback = false;
     notifyListeners();
+
+    if (!DemoPreflight.isDemoConfigReady) {
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+      _lastCallUsedDemoFallback = true;
+      _lastCallSid = 'DEMO-${DateTime.now().millisecondsSinceEpoch}';
+      return true;
+    }
 
     final to = _normalizeE164(profile.phoneNumber!);
 
@@ -140,6 +142,11 @@ class IncomingCallViewModel extends ChangeNotifier {
     if (shared.isNotEmpty) return shared;
 
     final s = e.toString();
+    if (s.contains('20102') || s.contains('Invalid access token header')) {
+      return 'Twilio token is invalid (20102). Regenerate Access Token using valid '
+          'TWILIO_ACCOUNT_SID / TWILIO_API_KEY_SID / TWILIO_API_KEY_SECRET and a valid '
+          'TwiML App SID, then run again.';
+    }
     if (s.contains('android_telecom_place_failed')) {
       return 'Could not start the call: Android blocked the outgoing call. '
           'Grant Phone permissions (including Read phone numbers), open system Settings → '
