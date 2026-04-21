@@ -87,6 +87,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildHeader(p),
           const SizedBox(height: AimyPhoneDesignTokens.space24),
           _buildContactSection(p),
+          if (_viewModel.postCallData != null) ...[
+            const SizedBox(height: AimyPhoneDesignTokens.space16),
+            _buildPostCallSection(_viewModel.postCallData!),
+          ],
           if (_viewModel.callError != null) ...[
             const SizedBox(height: 12),
             Text(
@@ -213,6 +217,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime d) {
+    final month = d.month.toString().padLeft(2, '0');
+    final day = d.day.toString().padLeft(2, '0');
+    final hour = d.hour.toString().padLeft(2, '0');
+    final minute = d.minute.toString().padLeft(2, '0');
+    return '$day/$month/${d.year} $hour:$minute';
+  }
+
+  Widget _buildPostCallSection(PostCallDataEntity data) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0x3321262D),
+        borderRadius: BorderRadius.circular(AimyPhoneDesignTokens.radiusLg),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Latest call outcome',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: AimyPhoneDesignTokens.textBodySm,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            data.summary,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: AimyPhoneDesignTokens.textCaption,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Notes: ${data.recruiterNotes.length}',
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontSize: AimyPhoneDesignTokens.textCaption,
+            ),
+          ),
+          if (data.scheduledInterviewAt != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Interview: ${_formatDateTime(data.scheduledInterviewAt!)}',
+              style: const TextStyle(
+                color: AppColors.accentBlue,
+                fontSize: AimyPhoneDesignTokens.textCaption,
+              ),
+            ),
+          ],
         ],
       ),
     );

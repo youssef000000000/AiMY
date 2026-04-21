@@ -4,6 +4,7 @@ import 'package:aimy/domain/domain.dart';
 /// Set [phoneNumber] to an E.164 number your Twilio account may call for tests.
 /// Replace with real API/datasource when backend is ready.
 class MockProfileRepository implements ProfileRepository {
+  static final Map<String, PostCallDataEntity> _postCallByProfileId = {};
   @override
   Future<ProfileEntity?> getProfile(String id) async {
     await Future<void>.delayed(const Duration(milliseconds: 400));
@@ -26,5 +27,18 @@ class MockProfileRepository implements ProfileRepository {
     DateTime? scheduledInterviewAt,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 650));
+    _postCallByProfileId[profileId] = PostCallDataEntity(
+      profileId: profileId,
+      summary: summary,
+      recruiterNotes: List<String>.from(recruiterNotes),
+      scheduledInterviewAt: scheduledInterviewAt,
+      savedAt: DateTime.now(),
+    );
+  }
+
+  @override
+  Future<PostCallDataEntity?> getPostCallData(String profileId) async {
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    return _postCallByProfileId[profileId];
   }
 }

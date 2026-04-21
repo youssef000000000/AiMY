@@ -3,6 +3,8 @@ import 'package:aimy/data/data.dart';
 import 'package:aimy/domain/domain.dart';
 import 'package:flutter/material.dart';
 
+import 'call_outcome_summary_screen.dart';
+
 class PostCallScreen extends StatefulWidget {
   const PostCallScreen({
     super.key,
@@ -165,6 +167,29 @@ class _PostCallScreenState extends State<PostCallScreen> {
     }
   }
 
+  PostCallDataEntity _buildPostCallData() {
+    return PostCallDataEntity(
+      profileId: widget.profile.id,
+      summary: 'Call ended in ${_format(widget.elapsed)} with ${widget.profile.displayName}.',
+      recruiterNotes: List<String>.from(_recruiterNotes),
+      scheduledInterviewAt: _scheduledInterviewAt,
+      savedAt: DateTime.now(),
+    );
+  }
+
+  Future<void> _goToOutcomeSummary() async {
+    if (_isSaving) return;
+    final payload = _buildPostCallData();
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => CallOutcomeSummaryScreen(
+          profile: widget.profile,
+          postCallData: payload,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -271,8 +296,8 @@ class _PostCallScreenState extends State<PostCallScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
-                    child: const Text('Done'),
+                    onPressed: _goToOutcomeSummary,
+                    child: const Text('Next'),
                   ),
                 ),
               ],

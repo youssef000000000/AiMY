@@ -21,6 +21,7 @@ class ProfileViewModel extends ChangeNotifier {
   bool _isPlacingCall = false;
   String? _callError;
   String? _lastCallSid;
+  PostCallDataEntity? _postCallData;
 
   ProfileEntity? get profile => _profile;
   bool get isLoading => _isLoading;
@@ -29,6 +30,7 @@ class ProfileViewModel extends ChangeNotifier {
   bool get isPlacingCall => _isPlacingCall;
   String? get callError => _callError;
   String? get lastCallSid => _lastCallSid;
+  PostCallDataEntity? get postCallData => _postCallData;
 
   /// Loads profile by id (e.g. from route or list tap).
   Future<void> loadProfile(String profileId) async {
@@ -38,6 +40,7 @@ class ProfileViewModel extends ChangeNotifier {
 
     try {
       _profile = await _profileRepository.getProfile(profileId);
+      _postCallData = await _profileRepository.getPostCallData(profileId);
       _error = null;
     } catch (e, st) {
       _error = e.toString();
