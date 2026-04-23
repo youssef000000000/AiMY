@@ -225,6 +225,23 @@ class _PostCallScreenState extends State<PostCallScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0x1A58A6FF),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: AppColors.borderGlow),
+                  ),
+                  child: const Text(
+                    'Demo mode • local data',
+                    style: TextStyle(
+                      color: Color(0xFFCFE6FF),
+                      fontSize: AimyPhoneDesignTokens.textCaption,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
                 if (_isLoadingSavedData) ...[
                   const LinearProgressIndicator(minHeight: 2),
                   const SizedBox(height: 10),

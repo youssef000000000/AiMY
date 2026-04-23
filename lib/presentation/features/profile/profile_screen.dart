@@ -4,7 +4,7 @@ import 'package:aimy/domain/domain.dart';
 import 'profile_viewmodel.dart';
 
 /// Profile (tap-to-call) screen — Step 1 in outbound journey.
-/// UI-only: Call button does not start a real call until Twilio SDK is integrated.
+/// In demo mode this screen uses local persistence and native dialer launch.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
     super.key,
@@ -84,6 +84,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const _DemoModeBadge(),
+          const SizedBox(height: AimyPhoneDesignTokens.space8),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton.icon(
@@ -293,6 +295,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _DemoModeBadge extends StatelessWidget {
+  const _DemoModeBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0x1A58A6FF),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.borderGlow),
+      ),
+      child: const Text(
+        'Demo mode • local data',
+        style: TextStyle(
+          color: Color(0xFFCFE6FF),
+          fontSize: AimyPhoneDesignTokens.textCaption,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

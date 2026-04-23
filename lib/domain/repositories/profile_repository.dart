@@ -2,7 +2,7 @@ import '../entities/profile_entity.dart';
 import '../entities/post_call_data_entity.dart';
 
 /// Abstract repository for profile data (candidate/lead).
-/// Implementation will be added when backend/API is ready.
+/// Current implementation is local-first for demo/offline flow.
 abstract class ProfileRepository {
   /// Fetches a single profile by id (e.g. for profile screen).
   Future<ProfileEntity?> getProfile(String id);

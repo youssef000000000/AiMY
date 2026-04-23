@@ -10,11 +10,17 @@ android/local.properties
 android/.gradle/
 android/app/build/
 android/build/
+android/app/google-services.json
 *.iml
 .idea/workspace.xml
 
+# IDE / local workspace noise
+.idea/
+.vscode/
+
 # Local secrets (copy from config/dart_defines.example.json — never commit real values)
 config/dart_defines.json
+google-services.json
 
 # OS
 .DS_Store

@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// In-memory profile for stakeholder demos (squad/manager).
 /// Set [phoneNumber] to an E.164 number your Twilio account may call for tests.
-/// Replace with real API/datasource when backend is ready.
+/// Post-call data is persisted locally on device via SharedPreferences.
 class MockProfileRepository implements ProfileRepository {
   static const String _postCallPrefix = 'aimy.postcall.';
   @override
