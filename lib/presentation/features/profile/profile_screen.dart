@@ -84,6 +84,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () async {
+                await _viewModel.clearDemoData();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Demo data reset')),
+                );
+              },
+              icon: const Icon(Icons.restart_alt, size: 18),
+              label: const Text('Reset demo'),
+            ),
+          ),
+          const SizedBox(height: AimyPhoneDesignTokens.space8),
           _buildHeader(p),
           const SizedBox(height: AimyPhoneDesignTokens.space24),
           _buildContactSection(p),

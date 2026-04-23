@@ -27,12 +27,26 @@ class _PostCallScreenState extends State<PostCallScreen> {
   late final ProfileRepository _profileRepository;
   DateTime? _scheduledInterviewAt;
   final List<String> _recruiterNotes = <String>[];
+  bool _isLoadingSavedData = true;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
     _profileRepository = widget.profileRepository ?? MockProfileRepository();
+    _hydrateSavedData();
+  }
+
+  Future<void> _hydrateSavedData() async {
+    final existing = await _profileRepository.getPostCallData(widget.profile.id);
+    if (!mounted) return;
+    if (existing != null) {
+      _scheduledInterviewAt = existing.scheduledInterviewAt;
+      _recruiterNotes
+        ..clear()
+        ..addAll(existing.recruiterNotes);
+    }
+    setState(() => _isLoadingSavedData = false);
   }
 
   String _format(Duration d) {
@@ -140,6 +154,11 @@ class _PostCallScreenState extends State<PostCallScreen> {
     );
   }
 
+  void _removeNoteAt(int index) {
+    if (index < 0 || index >= _recruiterNotes.length) return;
+    setState(() => _recruiterNotes.removeAt(index));
+  }
+
   Future<void> _saveToProfile() async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
@@ -206,6 +225,10 @@ class _PostCallScreenState extends State<PostCallScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (_isLoadingSavedData) ...[
+                  const LinearProgressIndicator(minHeight: 2),
+                  const SizedBox(height: 10),
+                ],
                 Text(
                   'Call ended • ${_format(widget.elapsed)}',
                   style: const TextStyle(
@@ -239,6 +262,30 @@ class _PostCallScreenState extends State<PostCallScreen> {
                     style: const TextStyle(
                       color: AppColors.textMuted,
                       fontSize: AimyPhoneDesignTokens.textCaption,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ..._recruiterNotes.asMap().entries.map(
+                    (entry) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '• ${entry.value}',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: AimyPhoneDesignTokens.textCaption,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => _removeNoteAt(entry.key),
+                            icon: const Icon(Icons.close, size: 16),
+                            tooltip: 'Remove note',
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

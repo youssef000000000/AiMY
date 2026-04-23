@@ -13,6 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
   permission_handler: ^12.0.1
+  shared_preferences: ^2.5.3
   twilio_voice: ^0.3.2+2
   url_launcher: ^6.3.1
 

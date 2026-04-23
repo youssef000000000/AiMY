@@ -12,6 +12,7 @@ class ProfileViewModel extends ChangeNotifier {
       : _profileRepository = profileRepository ?? MockProfileRepository();
 
   final ProfileRepository _profileRepository;
+  String? _currentProfileId;
 
   ProfileEntity? _profile;
   bool _isLoading = true;
@@ -33,6 +34,7 @@ class ProfileViewModel extends ChangeNotifier {
 
   /// Loads profile by id (e.g. from route or list tap).
   Future<void> loadProfile(String profileId) async {
+    _currentProfileId = profileId;
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -48,6 +50,14 @@ class ProfileViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> clearDemoData() async {
+    final profileId = _currentProfileId ?? _profile?.id;
+    if (profileId == null) return;
+    await _profileRepository.clearPostCallData(profileId);
+    _postCallData = null;
+    notifyListeners();
   }
 
   /// Called when user taps Call.

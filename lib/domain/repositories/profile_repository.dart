@@ -18,6 +18,9 @@ abstract class ProfileRepository {
   /// Reads previously saved post-call output for a profile.
   Future<PostCallDataEntity?> getPostCallData(String profileId);
 
+  /// Clears saved local demo data for a profile.
+  Future<void> clearPostCallData(String profileId);
+
   /// Placeholder for list; can be extended later.
   // Future<List<ProfileEntity>> getProfiles();
 }
