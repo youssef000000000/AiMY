@@ -95,8 +95,8 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
     return ListenableBuilder(
       listenable: _viewModel,
       builder: (context, _) {
-        const hPad = AimyPhoneDesignTokens.screenPaddingH;
-        const vPad = AimyPhoneDesignTokens.screenPaddingV;
+        const hPad = 16.0;
+        const vPad = 12.0;
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -126,12 +126,12 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
                               'Incoming Call',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: AimyPhoneDesignTokens.textH3,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
                                 color: Colors.white,
                               ),
                             ),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 26),
                             Center(child: _buildAvatar()),
                             const SizedBox(height: 16),
                             Text(
@@ -181,7 +181,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
                   'Call started (sid: ${_viewModel.lastCallSid})',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: AimyPhoneDesignTokens.answerGreen,
+                    color: Color(0xFF15803D),
                     fontSize: AimyPhoneDesignTokens.textCaption,
                   ),
                 ),
@@ -228,19 +228,19 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0x26FFB300),
+            color: const Color(0xFFFFF7E1),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0x80FFCA28)),
+            border: Border.all(color: const Color(0xFFFCD34D)),
           ),
           child: const Row(
             children: [
-              Icon(Icons.info_outline, color: Color(0xFFFFE082), size: 18),
+              Icon(Icons.info_outline, color: Color(0xFFD97706), size: 18),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Running in demo mode. Answer will start a simulated call until Twilio/Firebase config is added.',
                   style: TextStyle(
-                    color: Color(0xFFFFF8E1),
+                    color: Color(0xFF92400E),
                     fontSize: AimyPhoneDesignTokens.textCaption,
                     height: 1.3,
                   ),
@@ -259,19 +259,20 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0x33C62828),
+            color: const Color(0xFFFFE8E8),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.error.withOpacity(0.6)),
+            border: Border.all(color: const Color(0xFFFCA5A5)),
           ),
           child: Row(
             children: [
-              const Icon(Icons.error_outline, color: Color(0xFFFFCDD2), size: 18),
+              const Icon(Icons.error_outline,
+                  color: Color(0xFFB91C1C), size: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   _viewModel.warmUpError!,
                   style: const TextStyle(
-                    color: Color(0xFFFFCDD2),
+                    color: Color(0xFFB91C1C),
                     fontSize: AimyPhoneDesignTokens.textCaption,
                     height: 1.3,
                   ),
@@ -290,21 +291,19 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0x332E7D32),
+            color: const Color(0xFFE8F8ED),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: AimyPhoneDesignTokens.answerGreen.withOpacity(0.5),
-            ),
+            border: Border.all(color: const Color(0xFF86EFAC)),
           ),
           child: const Row(
             children: [
-              Icon(Icons.check_circle, color: Color(0xFF81C784), size: 18),
+              Icon(Icons.check_circle, color: Color(0xFF15803D), size: 18),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Voice ready — tap Answer to place the demo call.',
                   style: TextStyle(
-                    color: Color(0xFFC8E6C9),
+                    color: Color(0xFF166534),
                     fontSize: AimyPhoneDesignTokens.textCaption,
                     height: 1.3,
                   ),
@@ -357,7 +356,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
       decoration: BoxDecoration(
         color: const Color(0x3321262D),
         borderRadius: BorderRadius.circular(AimyPhoneDesignTokens.radiusLg),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: const Color(0xFFE7EBF2)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -628,7 +627,8 @@ class _CallingScreenState extends State<_CallingScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (!_waitingForReturnFromDialer || _navigated) return;
-    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
       _sawBackgroundState = true;
       return;
     }
@@ -651,8 +651,8 @@ class _CallingScreenState extends State<_CallingScreen>
       return;
     }
     setState(() {
-      _localError =
-          widget.viewModel.error ?? 'Could not start the call. Please try again.';
+      _localError = widget.viewModel.error ??
+          'Could not start the call. Please try again.';
     });
   }
 
@@ -728,11 +728,14 @@ class _CallingScreenState extends State<_CallingScreen>
                   const SizedBox(height: 14),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
                       color: const Color(0x33C62828),
-                      borderRadius: BorderRadius.circular(AimyPhoneDesignTokens.radiusMd),
-                      border: Border.all(color: AppColors.error.withOpacity(0.6)),
+                      borderRadius:
+                          BorderRadius.circular(AimyPhoneDesignTokens.radiusMd),
+                      border:
+                          Border.all(color: AppColors.error.withOpacity(0.6)),
                     ),
                     child: Text(
                       _localError!,

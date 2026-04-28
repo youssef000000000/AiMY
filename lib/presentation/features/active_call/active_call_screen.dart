@@ -53,8 +53,8 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: AimyPhoneDesignTokens.screenPaddingH,
-              vertical: AimyPhoneDesignTokens.screenPaddingV,
+              horizontal: 16,
+              vertical: 12,
             ),
             child: ListenableBuilder(
               listenable: _viewModel,
@@ -77,7 +77,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                         );
                       },
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
                     Center(
                       child: CircleAvatar(
                         radius: 34,
@@ -86,7 +86,8 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                         child: avatar == null
                             ? Text(
                                 widget.profile.displayName.isNotEmpty
-                                    ? widget.profile.displayName[0].toUpperCase()
+                                    ? widget.profile.displayName[0]
+                                        .toUpperCase()
                                     : '?',
                                 style: const TextStyle(
                                   color: Colors.white,
@@ -193,7 +194,8 @@ class _TopBar extends StatelessWidget {
           ),
           child: IconButton(
             onPressed: onMinimize,
-            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primary),
+            icon: const Icon(Icons.keyboard_arrow_down_rounded,
+                color: AppColors.primary),
             tooltip: 'Minimize call',
           ),
         ),
@@ -249,7 +251,8 @@ class _TranscriptCard extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(Icons.fiber_manual_record, color: Color(0xFF45E07A), size: 10),
+              Icon(Icons.fiber_manual_record,
+                  color: Color(0xFF45E07A), size: 10),
               SizedBox(width: 6),
               Text(
                 'Live transcript',
@@ -287,24 +290,27 @@ class _NudgesRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
-      children: [
-        Expanded(
-          child: _NudgeCard(
-            icon: Icons.lightbulb_outline,
-            title: 'Nudge',
-            message: 'Confirm notice period.',
+    return const SizedBox(
+      height: 80,
+      child: Row(
+        children: [
+          Expanded(
+            child: _NudgeCard(
+              icon: Icons.lightbulb_outline,
+              title: 'Nudge',
+              message: 'Confirm notice period.',
+            ),
           ),
-        ),
-        SizedBox(width: 10),
-        Expanded(
-          child: _NudgeCard(
-            icon: Icons.task_alt,
-            title: 'Action',
-            message: 'Schedule technical interview.',
+          SizedBox(width: 10),
+          Expanded(
+            child: _NudgeCard(
+              icon: Icons.task_alt,
+              title: 'Action',
+              message: 'Schedule technical interview.',
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -323,6 +329,7 @@ class _NudgeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: double.infinity,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: const Color(0x1A58A6FF),
@@ -390,13 +397,13 @@ class _ControlsRow extends StatelessWidget {
         _ControlButton(
           icon: isMuted ? Icons.mic_off : Icons.mic,
           label: isMuted ? 'Unmute' : 'Mute',
-          color: AppColors.surface,
+          color: AppColors.accentBlue,
           onTap: onMute,
         ),
         _ControlButton(
           icon: isOnHold ? Icons.play_arrow_rounded : Icons.pause,
           label: isOnHold ? 'Resume' : 'Hold',
-          color: AppColors.surface,
+          color: AppColors.accentPurple,
           onTap: onHold,
         ),
         _ControlButton(

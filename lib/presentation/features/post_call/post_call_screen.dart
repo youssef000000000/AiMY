@@ -38,7 +38,8 @@ class _PostCallScreenState extends State<PostCallScreen> {
   }
 
   Future<void> _hydrateSavedData() async {
-    final existing = await _profileRepository.getPostCallData(widget.profile.id);
+    final existing =
+        await _profileRepository.getPostCallData(widget.profile.id);
     if (!mounted) return;
     if (existing != null) {
       _scheduledInterviewAt = existing.scheduledInterviewAt;
@@ -65,23 +66,154 @@ class _PostCallScreenState extends State<PostCallScreen> {
 
   Future<void> _scheduleInterview() async {
     final now = DateTime.now();
+    final tomorrow = now.add(const Duration(days: 1));
+    final nextBusinessDay = now.add(const Duration(days: 2));
+
+    final selected = await showModalBottomSheet<DateTime>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Schedule interview',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: AimyPhoneDesignTokens.textBody,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Choose a quick demo slot or pick a custom time.',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: AimyPhoneDesignTokens.textCaption,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _ScheduleOptionTile(
+                  icon: Icons.wb_sunny_outlined,
+                  title: 'Tomorrow morning',
+                  subtitle: _formatDateTime(
+                    DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 10),
+                  ),
+                  onTap: () => Navigator.of(context).pop(
+                    DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 10),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _ScheduleOptionTile(
+                  icon: Icons.schedule,
+                  title: 'Tomorrow afternoon',
+                  subtitle: _formatDateTime(
+                    DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 14),
+                  ),
+                  onTap: () => Navigator.of(context).pop(
+                    DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 14),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _ScheduleOptionTile(
+                  icon: Icons.event_available,
+                  title: 'Next available slot',
+                  subtitle: _formatDateTime(
+                    DateTime(
+                      nextBusinessDay.year,
+                      nextBusinessDay.month,
+                      nextBusinessDay.day,
+                      11,
+                    ),
+                  ),
+                  onTap: () => Navigator.of(context).pop(
+                    DateTime(
+                      nextBusinessDay.year,
+                      nextBusinessDay.month,
+                      nextBusinessDay.day,
+                      11,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _ScheduleOptionTile(
+                  icon: Icons.edit_calendar_outlined,
+                  title: 'Pick custom date and time',
+                  subtitle: 'Open calendar and time picker',
+                  onTap: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted) return;
+    if (selected != null) {
+      _applyScheduledInterview(selected);
+      return;
+    }
+
+    await _pickCustomInterviewTime(now);
+  }
+
+  Future<void> _pickCustomInterviewTime(DateTime now) async {
     final date = await showDatePicker(
       context: context,
       firstDate: now,
       lastDate: now.add(const Duration(days: 365)),
       initialDate: _scheduledInterviewAt ?? now.add(const Duration(days: 1)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.accentBlue,
+              surface: AppColors.surface,
+              onSurface: AppColors.onSurface,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (date == null || !mounted) return;
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_scheduledInterviewAt ?? now),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.accentBlue,
+              surface: AppColors.surface,
+              onSurface: AppColors.onSurface,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (time == null || !mounted) return;
 
-    final scheduled = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    final scheduled =
+        DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    _applyScheduledInterview(scheduled);
+  }
+
+  void _applyScheduledInterview(DateTime scheduled) {
     setState(() => _scheduledInterviewAt = scheduled);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Interview scheduled for ${_formatDateTime(scheduled)}')),
+      SnackBar(
+          content:
+              Text('Interview scheduled for ${_formatDateTime(scheduled)}')),
     );
   }
 
@@ -177,7 +309,8 @@ class _PostCallScreenState extends State<PostCallScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not save profile data. Please retry.')),
+        const SnackBar(
+            content: Text('Could not save profile data. Please retry.')),
       );
     } finally {
       if (mounted) {
@@ -189,7 +322,8 @@ class _PostCallScreenState extends State<PostCallScreen> {
   PostCallDataEntity _buildPostCallData() {
     return PostCallDataEntity(
       profileId: widget.profile.id,
-      summary: 'Call ended in ${_format(widget.elapsed)} with ${widget.profile.displayName}.',
+      summary:
+          'Call ended in ${_format(widget.elapsed)} with ${widget.profile.displayName}.',
       recruiterNotes: List<String>.from(_recruiterNotes),
       scheduledInterviewAt: _scheduledInterviewAt,
       savedAt: DateTime.now(),
@@ -216,17 +350,35 @@ class _PostCallScreenState extends State<PostCallScreen> {
         decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              AimyPhoneDesignTokens.screenPaddingH,
-              AimyPhoneDesignTokens.screenPaddingV,
-              AimyPhoneDesignTokens.screenPaddingH,
-              AimyPhoneDesignTokens.screenPaddingV,
-            ),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                    ),
+                    const Expanded(
+                      child: Text(
+                        'Post-Call Actions',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                        onPressed: () {},
+                        icon: const Icon(Icons.more_horiz_rounded)),
+                  ],
+                ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0x1A58A6FF),
                     borderRadius: BorderRadius.circular(999),
@@ -246,20 +398,34 @@ class _PostCallScreenState extends State<PostCallScreen> {
                   const LinearProgressIndicator(minHeight: 2),
                   const SizedBox(height: 10),
                 ],
-                Text(
-                  'Call ended • ${_format(widget.elapsed)}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: AimyPhoneDesignTokens.textH2,
-                    fontWeight: FontWeight.w700,
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.border),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  widget.profile.displayName,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: AimyPhoneDesignTokens.textBodySm,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Call ended • ${_format(widget.elapsed)}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.profile.displayName,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: AimyPhoneDesignTokens.textBodySm,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 if (_scheduledInterviewAt != null) ...[
@@ -269,47 +435,65 @@ class _PostCallScreenState extends State<PostCallScreen> {
                     style: const TextStyle(
                       color: AppColors.accentBlue,
                       fontSize: AimyPhoneDesignTokens.textCaption,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
                 if (_recruiterNotes.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Text(
-                    'Notes captured: ${_recruiterNotes.length}',
-                    style: const TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: AimyPhoneDesignTokens.textCaption,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.border),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  ..._recruiterNotes.asMap().entries.map(
-                    (entry) => Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '• ${entry.value}',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: AimyPhoneDesignTokens.textCaption,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Notes captured: ${_recruiterNotes.length}',
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: AimyPhoneDesignTokens.textCaption,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        ..._recruiterNotes.asMap().entries.map(
+                              (entry) => Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '• ${entry.value}',
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize:
+                                              AimyPhoneDesignTokens.textCaption,
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: () => _removeNoteAt(entry.key),
+                                      icon: const Icon(Icons.close, size: 16),
+                                      tooltip: 'Remove note',
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          IconButton(
-                            onPressed: () => _removeNoteAt(entry.key),
-                            icon: const Icon(Icons.close, size: 16),
-                            tooltip: 'Remove note',
-                          ),
-                        ],
-                      ),
+                      ],
                     ),
                   ),
                 ],
                 const SizedBox(height: 16),
                 _SummaryCard(profile: widget.profile),
                 const SizedBox(height: 16),
-                const _SectionTitle('Insights'),
+                const _SectionTitle('Advanced insights'),
+                const SizedBox(height: 8),
+                const _InsightScoreCard(),
                 const SizedBox(height: 8),
                 const _InsightCard(
                   icon: Icons.task_alt,
@@ -335,6 +519,17 @@ class _PostCallScreenState extends State<PostCallScreen> {
                   title: 'Add recruiter notes',
                   actionLabel: _recruiterNotes.isEmpty ? 'Open' : 'View',
                   onTap: _addRecruiterNote,
+                ),
+                const SizedBox(height: 8),
+                _ActionCard(
+                  icon: Icons.playlist_add_check_circle,
+                  title: 'Create follow-up task',
+                  actionLabel: 'Add',
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Follow-up task added')),
+                    );
+                  },
                 ),
                 if (widget.callSid != null) ...[
                   const SizedBox(height: 12),
@@ -402,6 +597,74 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
+class _ScheduleOptionTile extends StatelessWidget {
+  const _ScheduleOptionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AimyPhoneDesignTokens.radiusMd),
+        onTap: onTap,
+        child: Ink(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(AimyPhoneDesignTokens.radiusMd),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: AppColors.accentBlue, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: AimyPhoneDesignTokens.textBodySm,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: AimyPhoneDesignTokens.textCaption,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right,
+                color: AppColors.textMuted,
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.title);
   final String title;
@@ -446,6 +709,60 @@ class _InsightCard extends StatelessWidget {
                 color: AppColors.textSecondary,
                 fontSize: AimyPhoneDesignTokens.textCaption,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InsightScoreCard extends StatelessWidget {
+  const _InsightScoreCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: Color(0xFFE7F0FF),
+            child: Text(
+              '92',
+              style: TextStyle(
+                color: Color(0xFF2563EB),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Confidence score: High',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Strong communication and relevant project examples.',
+                  style:
+                      TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                ),
+              ],
             ),
           ),
         ],

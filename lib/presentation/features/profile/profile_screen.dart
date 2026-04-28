@@ -10,10 +10,12 @@ class ProfileScreen extends StatefulWidget {
     super.key,
     this.profileId = '1',
     this.viewModel,
+    this.onBack,
   });
 
   final String profileId;
   final ProfileViewModel? viewModel;
+  final VoidCallback? onBack;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -21,6 +23,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late final ProfileViewModel _viewModel;
+  int _selectedTab = 0;
 
   @override
   void initState() {
@@ -37,36 +40,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.backgroundGradient,
-        ),
-        child: SafeArea(
-          child: ListenableBuilder(
-            listenable: _viewModel,
-            builder: (context, _) {
-              if (_viewModel.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (_viewModel.error != null) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      _viewModel.error!,
-                      style: const TextStyle(color: AppColors.error),
-                      textAlign: TextAlign.center,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _handleBackTap();
+      },
+      child: Scaffold(
+        body: Container(
+          decoration:
+              const BoxDecoration(gradient: AppColors.backgroundGradient),
+          child: SafeArea(
+            child: ListenableBuilder(
+              listenable: _viewModel,
+              builder: (context, _) {
+                if (_viewModel.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (_viewModel.error != null) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        _viewModel.error!,
+                        style: const TextStyle(color: AppColors.error),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
-                );
-              }
-              final p = _viewModel.profile;
-              if (p == null) {
-                return const Center(child: Text('Profile not found'));
-              }
-              return _buildContent(p);
-            },
+                  );
+                }
+                final p = _viewModel.profile;
+                if (p == null) {
+                  return const Center(child: Text('Profile not found'));
+                }
+                return _buildContent(p);
+              },
+            ),
           ),
         ),
       ),
@@ -74,18 +83,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildContent(ProfileEntity p) {
-    const paddingH = AimyPhoneDesignTokens.screenPaddingH;
-
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(
-        horizontal: paddingH,
-        vertical: AimyPhoneDesignTokens.screenPaddingV,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _handleBackTap,
+                child: const SizedBox(
+                  width: 64,
+                  height: 56,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
+                ),
+              ),
+              const Expanded(
+                child: Text(
+                  'Profile',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.more_horiz_rounded),
+              ),
+            ],
+          ),
           const _DemoModeBadge(),
-          const SizedBox(height: AimyPhoneDesignTokens.space8),
+          const SizedBox(height: 10),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton.icon(
@@ -100,14 +139,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               label: const Text('Reset demo'),
             ),
           ),
-          const SizedBox(height: AimyPhoneDesignTokens.space8),
+          const SizedBox(height: 8),
           _buildHeader(p),
-          const SizedBox(height: AimyPhoneDesignTokens.space24),
+          const SizedBox(height: 14),
           _buildContactSection(p),
-          if (_viewModel.postCallData != null) ...[
-            const SizedBox(height: AimyPhoneDesignTokens.space16),
-            _buildPostCallSection(_viewModel.postCallData!),
-          ],
+          const SizedBox(height: 14),
+          _buildTabs(),
+          const SizedBox(height: 10),
+          if (_selectedTab == 0) ...[
+            _buildActivityTimeline(),
+            if (_viewModel.postCallData != null) ...[
+              const SizedBox(height: 10),
+              _buildPostCallSection(_viewModel.postCallData!),
+            ],
+          ] else
+            _buildNotesPanel(),
           if (_viewModel.callError != null) ...[
             const SizedBox(height: 12),
             Text(
@@ -123,63 +169,79 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _handleBackTap() {
+    if (widget.onBack != null) {
+      widget.onBack!();
+      return;
+    }
+    Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+  }
+
   Widget _buildHeader(ProfileEntity p) {
-    // Layout/spacing tokens (phone design spec).
     final avatar = profileAvatarImageProvider(p);
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CircleAvatar(
-          radius: AimyPhoneDesignTokens.profileAvatarSize / 2,
-          backgroundColor: AppColors.surface,
-          backgroundImage: avatar,
-          child: avatar == null
-              ? Text(
-                  p.displayName.isNotEmpty ? p.displayName[0].toUpperCase() : '?',
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 30,
+            backgroundColor: AppColors.surface,
+            backgroundImage: avatar,
+            child: avatar == null
+                ? Text(
+                    p.displayName.isNotEmpty
+                        ? p.displayName[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      color: AppColors.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.displayName,
                   style: const TextStyle(
-                    fontSize: AimyPhoneDesignTokens.textH1,
-                    color: AppColors.onSurface,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
-                )
-              : null,
-        ),
-        const SizedBox(width: AimyPhoneDesignTokens.space16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                p.displayName,
-                style: const TextStyle(
-                  fontSize: AimyPhoneDesignTokens.textH2,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.onSurface,
                 ),
-              ),
-              if (p.title != null || p.company != null) ...[
-                const SizedBox(height: AimyPhoneDesignTokens.space4),
+                const SizedBox(height: 4),
                 Text(
                   [p.title, p.company].whereType<String>().join(' • '),
                   style: const TextStyle(
-                    fontSize: AimyPhoneDesignTokens.textBodySm,
+                    fontSize: 13,
                     color: AppColors.textMuted,
                   ),
                 ),
               ],
-            ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildContactSection(ProfileEntity p) {
     return Container(
-      padding: const EdgeInsets.all(AimyPhoneDesignTokens.space20),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(AimyPhoneDesignTokens.radiusLg),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
@@ -198,10 +260,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: AimyPhoneDesignTokens.space4),
                 Text(
                   p.phoneNumber ?? '—',
-                  style: const TextStyle(
-                    fontSize: AimyPhoneDesignTokens.textBody,
-                    color: AppColors.onSurface,
-                  ),
+                  style:
+                      const TextStyle(fontSize: 16, color: AppColors.onSurface),
                 ),
               ],
             ),
@@ -213,7 +273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: AimyPhoneDesignTokens.profileCallButtonSize,
                 height: AimyPhoneDesignTokens.profileCallButtonSize,
                 decoration: const BoxDecoration(
-                  color: AimyPhoneDesignTokens.answerGreen,
+                  color: Color(0xFF16A34A),
                   shape: BoxShape.circle,
                 ),
                 child: _viewModel.isPlacingCall
@@ -230,11 +290,110 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     : const Icon(
                         Icons.call,
                         color: Colors.white,
-                        size: AimyPhoneDesignTokens.profileCallButtonIconSize,
+                        size: 26,
                       ),
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTabs() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _TabButton(
+              label: 'Activity',
+              selected: _selectedTab == 0,
+              onTap: () => setState(() => _selectedTab = 0),
+            ),
+          ),
+          Expanded(
+            child: _TabButton(
+              label: 'Notes',
+              selected: _selectedTab == 1,
+              onTap: () => setState(() => _selectedTab = 1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivityTimeline() {
+    return const Column(
+      children: [
+        _TimelineItem(
+          title: 'Application reviewed',
+          subtitle: 'AI screening marked strong backend fit',
+          time: 'Today, 11:34',
+          icon: Icons.task_alt_rounded,
+        ),
+        SizedBox(height: 8),
+        _TimelineItem(
+          title: 'Recruiter call scheduled',
+          subtitle: 'Pending final confirmation',
+          time: 'Today, 10:15',
+          icon: Icons.calendar_month_rounded,
+        ),
+        SizedBox(height: 8),
+        _TimelineItem(
+          title: 'Skills extracted',
+          subtitle: 'Node.js, Flutter, and distributed systems',
+          time: 'Yesterday',
+          icon: Icons.auto_awesome_rounded,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNotesPanel() {
+    final notes = _viewModel.postCallData?.recruiterNotes ?? const <String>[];
+    if (notes.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: const Text(
+          'No recruiter notes yet. Add notes from Post-call Actions.',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
+      );
+    }
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: notes
+            .map(
+              (note) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  '• $note',
+                  style: const TextStyle(
+                      color: AppColors.textSecondary, fontSize: 13),
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }
@@ -252,8 +411,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0x3321262D),
-        borderRadius: BorderRadius.circular(AimyPhoneDesignTokens.radiusLg),
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -263,7 +422,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'Latest call outcome',
             style: TextStyle(
               color: Colors.white,
-              fontSize: AimyPhoneDesignTokens.textBodySm,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -272,7 +431,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             data.summary,
             style: const TextStyle(
               color: AppColors.textSecondary,
-              fontSize: AimyPhoneDesignTokens.textCaption,
+              fontSize: 12,
               height: 1.35,
             ),
           ),
@@ -281,7 +440,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'Notes: ${data.recruiterNotes.length}',
             style: const TextStyle(
               color: AppColors.textMuted,
-              fontSize: AimyPhoneDesignTokens.textCaption,
+              fontSize: 12,
             ),
           ),
           if (data.scheduledInterviewAt != null) ...[
@@ -290,7 +449,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               'Interview: ${_formatDateTime(data.scheduledInterviewAt!)}',
               style: const TextStyle(
                 color: AppColors.accentBlue,
-                fontSize: AimyPhoneDesignTokens.textCaption,
+                fontSize: 12,
               ),
             ),
           ],
@@ -318,6 +477,109 @@ class _DemoModeBadge extends StatelessWidget {
           color: Color(0xFFCFE6FF),
           fontSize: AimyPhoneDesignTokens.textCaption,
           fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _TimelineItem extends StatelessWidget {
+  const _TimelineItem({
+    required this.title,
+    required this.subtitle,
+    required this.time,
+    required this.icon,
+  });
+
+  final String title;
+  final String subtitle;
+  final String time;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: AppColors.selectedBackground,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 16, color: const Color(0xFF2563EB)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                      fontSize: 12, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            time,
+            style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TabButton extends StatelessWidget {
+  const _TabButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFE8F1FF) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? const Color(0xFF1D4ED8) : const Color(0xFF7C879D),
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
         ),
       ),
     );
