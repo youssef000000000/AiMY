@@ -2,4 +2,8 @@
 library;
 
 export 'features/profile/profile_feature.dart';
+export 'features/main_menu/main_menu_feature.dart';
 export 'features/incoming_call/incoming_call_feature.dart';
+export 'features/active_call/active_call_feature.dart';
+export 'features/mini_player/mini_player_feature.dart';
+export 'features/post_call/post_call_feature.dart';

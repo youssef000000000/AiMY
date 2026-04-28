@@ -3,6 +3,7 @@ import 'package:aimy/data/data.dart';
 import 'package:aimy/domain/domain.dart';
 import 'package:flutter/material.dart';
 
+import '../active_call/active_call_screen.dart';
 import 'incoming_call_viewmodel.dart';
 
 class IncomingCallScreen extends StatefulWidget {
@@ -94,8 +95,8 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
     return ListenableBuilder(
       listenable: _viewModel,
       builder: (context, _) {
-        const hPad = AimyPhoneDesignTokens.screenPaddingH;
-        const vPad = AimyPhoneDesignTokens.screenPaddingV;
+        const hPad = 16.0;
+        const vPad = 12.0;
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -125,23 +126,25 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
                               'Incoming Call',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: AimyPhoneDesignTokens.textH3,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
                                 color: Colors.white,
                               ),
                             ),
-                            const SizedBox(height: 42),
+                            const SizedBox(height: 26),
                             Center(child: _buildAvatar()),
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 16),
                             Text(
                               _profile!.displayName,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
-                                fontSize: 40,
+                                fontSize: 34,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
-                                height: 1.0,
+                                height: 1.1,
                               ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -152,7 +155,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
                                 color: AppColors.textSecondary,
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 20),
                             _buildContextCard(),
                           ],
                         ),
@@ -178,12 +181,12 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
                   'Call started (sid: ${_viewModel.lastCallSid})',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: AimyPhoneDesignTokens.answerGreen,
+                    color: Color(0xFF15803D),
                     fontSize: AimyPhoneDesignTokens.textCaption,
                   ),
                 ),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               _buildActions(context),
             ],
           ),
@@ -219,39 +222,27 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
     }
 
     if (!_viewModel.isDemoConfigReady) {
-      final lines = DemoPreflight.evaluateBlockers();
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0x33C62828),
+            color: const Color(0xFFFFF7E1),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.error.withOpacity(0.6)),
+            border: Border.all(color: const Color(0xFFFCD34D)),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: const Row(
             children: [
-              const Text(
-                'Demo blocked — fix config',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: AimyPhoneDesignTokens.textBodySm,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ...lines.map(
-                (s) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    '• $s',
-                    style: const TextStyle(
-                      color: Color(0xFFFFCDD2),
-                      fontSize: AimyPhoneDesignTokens.textCaption,
-                      height: 1.35,
-                    ),
+              Icon(Icons.info_outline, color: Color(0xFFD97706), size: 18),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Running in demo mode. Answer will start a simulated call until Twilio/Firebase config is added.',
+                  style: TextStyle(
+                    color: Color(0xFF92400E),
+                    fontSize: AimyPhoneDesignTokens.textCaption,
+                    height: 1.3,
                   ),
                 ),
               ),
@@ -264,13 +255,30 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
     if (_viewModel.warmUpError != null) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: Text(
-          _viewModel.warmUpError!,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: AppColors.error,
-            fontSize: AimyPhoneDesignTokens.textCaption,
-            height: 1.35,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFE8E8),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFFFCA5A5)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.error_outline,
+                  color: Color(0xFFB91C1C), size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _viewModel.warmUpError!,
+                  style: const TextStyle(
+                    color: Color(0xFFB91C1C),
+                    fontSize: AimyPhoneDesignTokens.textCaption,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -283,21 +291,19 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0x332E7D32),
+            color: const Color(0xFFE8F8ED),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: AimyPhoneDesignTokens.answerGreen.withOpacity(0.5),
-            ),
+            border: Border.all(color: const Color(0xFF86EFAC)),
           ),
           child: const Row(
             children: [
-              Icon(Icons.check_circle, color: Color(0xFF81C784), size: 18),
+              Icon(Icons.check_circle, color: Color(0xFF15803D), size: 18),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Voice ready — tap Answer to place the demo call.',
                   style: TextStyle(
-                    color: Color(0xFFC8E6C9),
+                    color: Color(0xFF166534),
                     fontSize: AimyPhoneDesignTokens.textCaption,
                     height: 1.3,
                   ),
@@ -346,11 +352,11 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
   Widget _buildContextCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0x3321262D),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(AimyPhoneDesignTokens.radiusLg),
+        border: Border.all(color: const Color(0xFFE7EBF2)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,36 +400,53 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
 
   Widget _buildActions(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _ActionButton(
-          color: AimyPhoneDesignTokens.answerGreen,
-          icon: _viewModel.isPlacingCall ? Icons.hourglass_top : Icons.call,
-          label: _viewModel.isPlacingCall ? 'Calling' : 'Answer',
-          onTap: _viewModel.isPlacingCall ||
-                  !_viewModel.canAttemptAnswer(_profile!)
-              ? null
-              : () => _viewModel.answerCall(_profile!),
+        Expanded(
+          child: _ActionButton(
+            color: AimyPhoneDesignTokens.answerGreen,
+            icon: _viewModel.isPlacingCall ? Icons.hourglass_top : Icons.call,
+            label: _viewModel.isPlacingCall ? 'Calling' : 'Answer',
+            onTap: _viewModel.isPlacingCall ||
+                    !_viewModel.canAttemptAnswer(_profile!)
+                ? null
+                : () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => _CallingScreen(
+                          profile: _profile!,
+                          viewModel: _viewModel,
+                        ),
+                      ),
+                    );
+                  },
+          ),
         ),
-        _ActionButton(
-          color: AimyPhoneDesignTokens.declineRed,
-          icon: Icons.call_end,
-          label: 'Decline',
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Call declined')),
-            );
-          },
+        const SizedBox(width: 12),
+        Expanded(
+          child: _ActionButton(
+            color: AimyPhoneDesignTokens.declineRed,
+            icon: Icons.call_end,
+            label: 'Decline',
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Call declined')),
+              );
+            },
+          ),
         ),
-        _ActionButton(
-          color: AppColors.accentBlue,
-          icon: Icons.alarm,
-          label: 'Remind me',
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Reminder set')),
-            );
-          },
+        const SizedBox(width: 12),
+        Expanded(
+          child: _ActionButton(
+            color: AppColors.accentBlue,
+            icon: Icons.alarm,
+            label: 'Remind',
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Reminder set')),
+              );
+            },
+          ),
         ),
       ],
     );
@@ -513,21 +536,32 @@ class _ActionButton extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        GestureDetector(
-          onTap: onTap,
-          child: Opacity(
-            opacity: disabled ? 0.6 : 1,
-            child: Container(
-              width: AimyPhoneDesignTokens.incomingCallActionButtonSize,
-              height: AimyPhoneDesignTokens.incomingCallActionButtonSize,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: AimyPhoneDesignTokens.incomingCallActionIconSize,
+        Material(
+          color: Colors.transparent,
+          child: InkResponse(
+            onTap: onTap,
+            radius: AimyPhoneDesignTokens.incomingCallActionButtonSize * 0.55,
+            child: Opacity(
+              opacity: disabled ? 0.6 : 1,
+              child: Container(
+                width: AimyPhoneDesignTokens.incomingCallActionButtonSize,
+                height: AimyPhoneDesignTokens.incomingCallActionButtonSize,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: AimyPhoneDesignTokens.incomingCallActionIconSize,
+                ),
               ),
             ),
           ),
@@ -537,10 +571,193 @@ class _ActionButton extends StatelessWidget {
           label,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: AimyPhoneDesignTokens.textCaption,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CallingScreen extends StatefulWidget {
+  const _CallingScreen({
+    required this.profile,
+    required this.viewModel,
+  });
+
+  final ProfileEntity profile;
+  final IncomingCallViewModel viewModel;
+
+  @override
+  State<_CallingScreen> createState() => _CallingScreenState();
+}
+
+class _CallingScreenState extends State<_CallingScreen>
+    with WidgetsBindingObserver {
+  bool _didStart = false;
+  String? _localError;
+  bool _waitingForReturnFromDialer = false;
+  bool _sawBackgroundState = false;
+  bool _navigated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didStart) return;
+    _didStart = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _startCall();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!_waitingForReturnFromDialer || _navigated) return;
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
+      _sawBackgroundState = true;
+      return;
+    }
+    if (state == AppLifecycleState.resumed && _sawBackgroundState) {
+      _goToActiveCall();
+    }
+  }
+
+  Future<void> _startCall() async {
+    final ok = await widget.viewModel.answerCall(widget.profile);
+    if (!mounted) return;
+    if (ok) {
+      if (widget.viewModel.lastCallUsedDemoFallback) {
+        await _goToActiveCall();
+        return;
+      }
+      setState(() {
+        _waitingForReturnFromDialer = true;
+      });
+      return;
+    }
+    setState(() {
+      _localError = widget.viewModel.error ??
+          'Could not start the call. Please try again.';
+    });
+  }
+
+  Future<void> _goToActiveCall() async {
+    if (!mounted || _navigated) return;
+    _navigated = true;
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => ActiveCallScreen(
+          profile: widget.profile,
+          callSid: widget.viewModel.lastCallSid,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 52,
+                  height: 52,
+                  child: CircularProgressIndicator(strokeWidth: 3),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Calling ${widget.profile.displayName}...',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: AimyPhoneDesignTokens.textH3,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  widget.viewModel.willUseDemoFallback
+                      ? 'Starting simulated call...'
+                      : 'Opening phone app (dialer)...',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: AimyPhoneDesignTokens.textBodySm,
+                  ),
+                ),
+                if (_waitingForReturnFromDialer) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    widget.viewModel.willUseDemoFallback
+                        ? 'Simulated call is ready. Continue to Active Call.'
+                        : 'After the dialer opens, return to AiMY to see Active Call.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: AimyPhoneDesignTokens.textCaption,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton(
+                    onPressed: _goToActiveCall,
+                    child: const Text('Continue in AiMY'),
+                  ),
+                ],
+                if (_localError != null) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0x33C62828),
+                      borderRadius:
+                          BorderRadius.circular(AimyPhoneDesignTokens.radiusMd),
+                      border:
+                          Border.all(color: AppColors.error.withOpacity(0.6)),
+                    ),
+                    child: Text(
+                      _localError!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xFFFFCDD2),
+                        fontSize: AimyPhoneDesignTokens.textCaption,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Back'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
