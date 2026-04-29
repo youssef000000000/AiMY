@@ -1,5 +1,6 @@
 import 'package:aimy/presentation/features/active_call/active_call_screen.dart';
 import 'package:aimy/presentation/features/mini_player/mini_player_screen.dart';
+import 'package:aimy/presentation/features/notifications/notification_center_screen.dart';
 import 'package:aimy/presentation/features/profile/profile_screen.dart';
 import 'package:aimy/domain/domain.dart';
 import 'package:aimy/core/core.dart';
@@ -141,16 +142,32 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Widget _buildMoreTab() {
-    return const Padding(
-      padding: EdgeInsets.all(16),
+    return Padding(
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionHeader(title: 'More', subtitle: 'Settings and utilities'),
-          SizedBox(height: 16),
-          _SimpleCard(
+          const _SectionHeader(
+              title: 'More', subtitle: 'Settings and utilities'),
+          const SizedBox(height: 16),
+          const _SimpleCard(
             title: 'Demo Mode',
             subtitle: 'Local data enabled for presentation',
+          ),
+          const SizedBox(height: 12),
+          _SimpleCard(
+            title: 'Notification Center',
+            subtitle: 'Missed calls, callback reminders, and post-call alerts',
+            trailing: ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const NotificationCenterScreen(),
+                  ),
+                );
+              },
+              child: const Text('Open'),
+            ),
           ),
         ],
       ),
@@ -252,7 +269,7 @@ class _TopCandidatesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const names = ['Maya Noor', 'Liam Carter', 'Noah Blake'];
+    const names = ['Ahmed Mahfouz', 'Mohmed Hani', 'Samaa Mohamed'];
     return _SimpleCard(
       title: 'Top Candidates',
       subtitle: 'Ranked by call quality and confidence',
@@ -311,7 +328,7 @@ class _MiniPlayerBar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'On-call with Sarah Chen',
+                      'On-call with Youssef Emad',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,

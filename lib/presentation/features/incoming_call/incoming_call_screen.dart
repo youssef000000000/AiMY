@@ -441,14 +441,87 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
             color: AppColors.accentBlue,
             icon: Icons.alarm,
             label: 'Remind',
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Reminder set')),
-              );
-            },
+            onTap: _showReminderOptions,
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _showReminderOptions() async {
+    final reminder = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Remind me to call back',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: AimyPhoneDesignTokens.textBody,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _ReminderTile(
+                  title: 'In 30 minutes',
+                  subtitle: 'Default callback reminder',
+                  onTap: () => Navigator.of(context).pop('30 minutes'),
+                ),
+                _ReminderTile(
+                  title: 'In 1 hour',
+                  subtitle: 'Good for active recruiter sessions',
+                  onTap: () => Navigator.of(context).pop('1 hour'),
+                ),
+                _ReminderTile(
+                  title: 'Tomorrow morning',
+                  subtitle: 'Schedule for the next working day',
+                  onTap: () => Navigator.of(context).pop('tomorrow morning'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (reminder == null || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Callback reminder set for $reminder')),
+    );
+  }
+}
+
+class _ReminderTile extends StatelessWidget {
+  const _ReminderTile({
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      leading: const Icon(Icons.alarm, color: AppColors.accentBlue),
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(color: AppColors.textSecondary),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
     );
   }
 }
