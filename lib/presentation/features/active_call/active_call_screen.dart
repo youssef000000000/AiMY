@@ -110,7 +110,11 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _viewModel.isOnHold ? 'On hold' : 'Connected',
+                      _viewModel.isVoiceAiActive
+                          ? 'Voice AI monitoring'
+                          : _viewModel.isOnHold
+                              ? 'On hold'
+                              : 'Connected • ${_viewModel.audioRoute}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: AppColors.textSecondary,
@@ -122,14 +126,27 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                       child: _TranscriptCard(lines: _viewModel.transcript),
                     ),
                     const SizedBox(height: 10),
+                    _LiveMicTranscriptBar(
+                      isListening: _viewModel.isListening,
+                      error: _viewModel.transcriptError,
+                      onToggle: _viewModel.toggleLiveMicTranscript,
+                    ),
+                    const SizedBox(height: 10),
+                    _VoiceAiHandoffCard(
+                      isActive: _viewModel.isVoiceAiActive,
+                      onToggle: _viewModel.toggleVoiceAiHandoff,
+                    ),
+                    const SizedBox(height: 10),
                     const _NudgesRow(),
                     const SizedBox(height: 12),
                     _ControlsRow(
                       isMuted: _viewModel.isMuted,
                       isOnHold: _viewModel.isOnHold,
                       isEnding: _viewModel.isEnding,
+                      audioRoute: _viewModel.audioRoute,
                       onMute: _viewModel.toggleMute,
                       onHold: _viewModel.toggleHold,
+                      onAudioRoute: () => _showAudioRouteSheet(context),
                       onEnd: () async {
                         final navigator = Navigator.of(context);
                         await _viewModel.endCall();
@@ -165,6 +182,83 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _showAudioRouteSheet(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final route = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Audio route',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: AimyPhoneDesignTokens.textBody,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                for (final option in const [
+                  ('Earpiece', Icons.phone_in_talk),
+                  ('Speaker', Icons.volume_up),
+                  ('Bluetooth', Icons.bluetooth_audio),
+                ])
+                  _AudioRouteTile(
+                    title: option.$1,
+                    icon: option.$2,
+                    selected: _viewModel.audioRoute == option.$1,
+                    onTap: () => Navigator.of(context).pop(option.$1),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (route == null) return;
+    _viewModel.setAudioRoute(route);
+    if (!mounted) return;
+    messenger.showSnackBar(
+      SnackBar(content: Text('Audio routed to $route')),
+    );
+  }
+}
+
+class _AudioRouteTile extends StatelessWidget {
+  const _AudioRouteTile({
+    required this.title,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String title;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      leading: Icon(icon, color: AppColors.accentBlue),
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+      trailing: selected
+          ? const Icon(Icons.check_circle,
+              color: AimyPhoneDesignTokens.answerGreen)
+          : null,
     );
   }
 }
@@ -285,6 +379,64 @@ class _TranscriptCard extends StatelessWidget {
   }
 }
 
+class _LiveMicTranscriptBar extends StatelessWidget {
+  const _LiveMicTranscriptBar({
+    required this.isListening,
+    required this.error,
+    required this.onToggle,
+  });
+
+  final bool isListening;
+  final String? error;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: isListening ? const Color(0x223FB950) : AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isListening
+              ? AimyPhoneDesignTokens.answerGreen
+              : AppColors.border,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isListening ? Icons.graphic_eq : Icons.mic_none,
+            color: isListening
+                ? AimyPhoneDesignTokens.answerGreen
+                : AppColors.accentBlue,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              error ??
+                  (isListening
+                      ? 'Listening to your voice...'
+                      : 'Live mic transcript demo'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: AimyPhoneDesignTokens.textCaption,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onToggle,
+            child: Text(isListening ? 'Stop' : 'Start'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _NudgesRow extends StatelessWidget {
   const _NudgesRow();
 
@@ -308,6 +460,55 @@ class _NudgesRow extends StatelessWidget {
               title: 'Action',
               message: 'Schedule technical interview.',
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VoiceAiHandoffCard extends StatelessWidget {
+  const _VoiceAiHandoffCard({
+    required this.isActive,
+    required this.onToggle,
+  });
+
+  final bool isActive;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: isActive ? const Color(0x22A371F7) : AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isActive ? AppColors.accentPurple : AppColors.border,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isActive ? Icons.smart_toy : Icons.record_voice_over,
+            color: isActive ? AppColors.accentPurple : AppColors.accentBlue,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              isActive
+                  ? 'Voice AI is handling the call. Monitoring live transcript.'
+                  : 'Hand off to Voice AI for demo monitoring mode.',
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: AimyPhoneDesignTokens.textCaption,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onToggle,
+            child: Text(isActive ? 'Reclaim' : 'Hand off'),
           ),
         ],
       ),
@@ -377,16 +578,20 @@ class _ControlsRow extends StatelessWidget {
     required this.isMuted,
     required this.isOnHold,
     required this.isEnding,
+    required this.audioRoute,
     required this.onMute,
     required this.onHold,
+    required this.onAudioRoute,
     required this.onEnd,
   });
 
   final bool isMuted;
   final bool isOnHold;
   final bool isEnding;
+  final String audioRoute;
   final VoidCallback onMute;
   final VoidCallback onHold;
+  final VoidCallback onAudioRoute;
   final VoidCallback onEnd;
 
   @override
@@ -405,6 +610,12 @@ class _ControlsRow extends StatelessWidget {
           label: isOnHold ? 'Resume' : 'Hold',
           color: AppColors.accentPurple,
           onTap: onHold,
+        ),
+        _ControlButton(
+          icon: Icons.volume_up,
+          label: audioRoute,
+          color: AppColors.surface,
+          onTap: onAudioRoute,
         ),
         _ControlButton(
           icon: isEnding ? Icons.hourglass_top : Icons.call_end,

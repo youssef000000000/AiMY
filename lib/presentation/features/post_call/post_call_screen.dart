@@ -29,6 +29,10 @@ class _PostCallScreenState extends State<PostCallScreen> {
   final List<String> _recruiterNotes = <String>[];
   bool _isLoadingSavedData = true;
   bool _isSaving = false;
+  String? _summaryOverride;
+  String _disposition = 'Interested';
+  String _stage = 'Technical interview';
+  final List<String> _followUpTasks = <String>[];
 
   @override
   void initState() {
@@ -63,6 +67,11 @@ class _PostCallScreenState extends State<PostCallScreen> {
     final minute = d.minute.toString().padLeft(2, '0');
     return '$day/$month/${d.year} $hour:$minute';
   }
+
+  String get _summaryText =>
+      _summaryOverride ??
+      'Spoke with ${widget.profile.displayName} about the current opportunity. '
+          'Candidate asked about role scope, process timeline, and next interview stage.';
 
   Future<void> _scheduleInterview() async {
     final now = DateTime.now();
@@ -293,12 +302,13 @@ class _PostCallScreenState extends State<PostCallScreen> {
 
   Future<void> _saveToProfile() async {
     if (_isSaving) return;
+    final confirmed = await _confirmProfileSync();
+    if (confirmed != true || !mounted) return;
     setState(() => _isSaving = true);
     try {
       await _profileRepository.savePostCallData(
         profileId: widget.profile.id,
-        summary:
-            'Call ended in ${_format(widget.elapsed)} with ${widget.profile.displayName}.',
+        summary: _summaryText,
         recruiterNotes: List<String>.from(_recruiterNotes),
         scheduledInterviewAt: _scheduledInterviewAt,
       );
@@ -319,11 +329,167 @@ class _PostCallScreenState extends State<PostCallScreen> {
     }
   }
 
+  Future<bool?> _confirmProfileSync() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: const Text(
+            'Save to profile?',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Text(
+            'Summary: $_summaryText\n\n'
+            'Disposition: $_disposition\n'
+            'Stage: $_stage\n'
+            'Notes: ${_recruiterNotes.length}\n'
+            'Interview: ${_scheduledInterviewAt == null ? 'Not scheduled' : _formatDateTime(_scheduledInterviewAt!)}',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              height: 1.35,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Confirm save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _editSummary() async {
+    var draftSummary = _summaryText;
+    final edited = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            16,
+            16,
+            16 + MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Edit call summary',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: AimyPhoneDesignTokens.textBody,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                initialValue: draftSummary,
+                maxLines: 5,
+                autofocus: true,
+                onChanged: (value) => draftSummary = value,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: 'Update summary before saving...',
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () =>
+                      Navigator.of(context).pop(draftSummary.trim()),
+                  child: const Text('Save summary'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (edited == null || edited.isEmpty || !mounted) return;
+    setState(() => _summaryOverride = edited);
+  }
+
+  Future<void> _createFollowUpTask() async {
+    final task = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Create follow-up task',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: AimyPhoneDesignTokens.textBody,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _TaskOptionTile(
+                  icon: Icons.phone_callback,
+                  title: 'Callback candidate tomorrow',
+                  subtitle: 'Due tomorrow at 10:00',
+                  onTap: () =>
+                      Navigator.of(context).pop('Callback candidate tomorrow'),
+                ),
+                const SizedBox(height: 8),
+                _TaskOptionTile(
+                  icon: Icons.mail_outline,
+                  title: 'Send role details',
+                  subtitle: 'Share job scope and process timeline',
+                  onTap: () => Navigator.of(context).pop('Send role details'),
+                ),
+                const SizedBox(height: 8),
+                _TaskOptionTile(
+                  icon: Icons.event_available,
+                  title: 'Prepare technical interview',
+                  subtitle: 'Add interview task for Talent pipeline',
+                  onTap: () =>
+                      Navigator.of(context).pop('Prepare technical interview'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (task == null || !mounted) return;
+    setState(() {
+      if (!_followUpTasks.contains(task)) {
+        _followUpTasks.add(task);
+      }
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Task created: $task')),
+    );
+  }
+
   PostCallDataEntity _buildPostCallData() {
     return PostCallDataEntity(
       profileId: widget.profile.id,
-      summary:
-          'Call ended in ${_format(widget.elapsed)} with ${widget.profile.displayName}.',
+      summary: _summaryText,
       recruiterNotes: List<String>.from(_recruiterNotes),
       scheduledInterviewAt: _scheduledInterviewAt,
       savedAt: DateTime.now(),
@@ -489,7 +655,23 @@ class _PostCallScreenState extends State<PostCallScreen> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                _SummaryCard(profile: widget.profile),
+                _SummaryCard(
+                  summary: _summaryText,
+                  onEdit: _editSummary,
+                ),
+                const SizedBox(height: 16),
+                _OutcomeFieldsCard(
+                  disposition: _disposition,
+                  stage: _stage,
+                  onDispositionChanged: (value) {
+                    if (value == null) return;
+                    setState(() => _disposition = value);
+                  },
+                  onStageChanged: (value) {
+                    if (value == null) return;
+                    setState(() => _stage = value);
+                  },
+                ),
                 const SizedBox(height: 16),
                 const _SectionTitle('Advanced insights'),
                 const SizedBox(height: 8),
@@ -524,13 +706,13 @@ class _PostCallScreenState extends State<PostCallScreen> {
                 _ActionCard(
                   icon: Icons.playlist_add_check_circle,
                   title: 'Create follow-up task',
-                  actionLabel: 'Add',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Follow-up task added')),
-                    );
-                  },
+                  actionLabel: _followUpTasks.isEmpty ? 'Add' : 'View',
+                  onTap: _createFollowUpTask,
                 ),
+                if (_followUpTasks.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _FollowUpTasksCard(tasks: _followUpTasks),
+                ],
                 if (widget.callSid != null) ...[
                   const SizedBox(height: 12),
                   Text(
@@ -569,9 +751,10 @@ class _PostCallScreenState extends State<PostCallScreen> {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.profile});
+  const _SummaryCard({required this.summary, required this.onEdit});
 
-  final ProfileEntity profile;
+  final String summary;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -583,16 +766,116 @@ class _SummaryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AimyPhoneDesignTokens.radiusLg),
         border: Border.all(color: AppColors.border),
       ),
-      child: Text(
-        'Summary:\n'
-        'Spoke with ${profile.displayName} about the current opportunity. '
-        'Candidate asked about role scope, process timeline, and next interview stage.',
-        style: const TextStyle(
-          color: AppColors.onSurface,
-          fontSize: AimyPhoneDesignTokens.textBodySm,
-          height: 1.35,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Editable summary',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: AimyPhoneDesignTokens.textBodySm,
+                  ),
+                ),
+              ),
+              TextButton(onPressed: onEdit, child: const Text('Edit')),
+            ],
+          ),
+          Text(
+            summary,
+            style: const TextStyle(
+              color: AppColors.onSurface,
+              fontSize: AimyPhoneDesignTokens.textBodySm,
+              height: 1.35,
+            ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class _OutcomeFieldsCard extends StatelessWidget {
+  const _OutcomeFieldsCard({
+    required this.disposition,
+    required this.stage,
+    required this.onDispositionChanged,
+    required this.onStageChanged,
+  });
+
+  final String disposition;
+  final String stage;
+  final ValueChanged<String?> onDispositionChanged;
+  final ValueChanged<String?> onStageChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(AimyPhoneDesignTokens.radiusMd),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Profile sync fields',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: AimyPhoneDesignTokens.textBodySm,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _DarkDropdown(
+            label: 'Disposition',
+            value: disposition,
+            values: const ['Interested', 'Follow-up', 'Not interested'],
+            onChanged: onDispositionChanged,
+          ),
+          const SizedBox(height: 8),
+          _DarkDropdown(
+            label: 'Stage',
+            value: stage,
+            values: const ['Technical interview', 'Shortlisted', 'Nurture'],
+            onChanged: onStageChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DarkDropdown extends StatelessWidget {
+  const _DarkDropdown({
+    required this.label,
+    required this.value,
+    required this.values,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final List<String> values;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      dropdownColor: AppColors.surface,
+      decoration: InputDecoration(labelText: label),
+      style: const TextStyle(color: Colors.white),
+      items: values
+          .map((v) => DropdownMenuItem<String>(value: v, child: Text(v)))
+          .toList(),
+      onChanged: onChanged,
     );
   }
 }
@@ -660,6 +943,87 @@ class _ScheduleOptionTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _TaskOptionTile extends StatelessWidget {
+  const _TaskOptionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return _ScheduleOptionTile(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      onTap: onTap,
+    );
+  }
+}
+
+class _FollowUpTasksCard extends StatelessWidget {
+  const _FollowUpTasksCard({required this.tasks});
+
+  final List<String> tasks;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(AimyPhoneDesignTokens.radiusMd),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Follow-up tasks: ${tasks.length}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: AimyPhoneDesignTokens.textBodySm,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...tasks.map(
+            (task) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.task_alt,
+                    color: AppColors.accentBlue,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      task,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: AimyPhoneDesignTokens.textCaption,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
